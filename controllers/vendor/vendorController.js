@@ -474,6 +474,20 @@ exports.getAllVendor = async (req, res) => {
   }
 };
 
+exports.getAllVendorsForAdmin = async (req, res) => {
+  try {
+    const allVendor = await vendorSchema.find();
+    if (allVendor.length > 0) {
+      return res.status(200).json(allVendor);
+    } else {
+      return res.status(404).json({ message: "No vendor found" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.getOnlyProductVendor = async (req, res) => {
   try {
     const productVendor = await vendorSchema.find({
@@ -502,6 +516,53 @@ exports.getVendorByServiceName = async (req, res) => {
     } else {
       return res.status(404).json({ message: "No vendor found" });
     }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.writeServiceReview = async (req, res) => {
+  try {
+    const { user_id, user_name, review_title, review_description, ratings } =
+      req.body;
+
+    const serviceId = req.params.id;
+    const findService = await vendorSchema.findOne({ _id: serviceId });
+    if (!findService) {
+      console.log("service not found");
+      return res.status(404).json({ message: "service not found" });
+    }
+
+    const rating = Number(ratings);
+    if (isNaN(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({
+        message: "Invalid rating value. It should be between 1 and 5.",
+      });
+    }
+
+    findService.Reviews.push({
+      user_id,
+      user_name,
+      review_title,
+      review_description,
+      ratings: rating,
+    });
+    await findService.save();
+
+    res.status(200).json({ message: "Review added successfully", findService });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+exports.getServiceReview = async (req, res) => {
+  try {
+    const service = await vendorSchema.findOne({ _id: req.params.id });
+    if (!service) {
+      return res.status(404).json({ message: "services not found" });
+    }
+    res.status(200).json({ reviews: service.Reviews });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -614,6 +675,46 @@ exports.deleteVendorProfile = async (req, res) => {
   try {
     await User.findByIdAndDelete(req.user.id);
     res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.vendorApprove = async (req, res) => {
+  try {
+    let vendorId = req.params.id;
+    let findVendor = await vendorSchema.findOne({ _id: vendorId });
+    if (!findVendor) {
+      console.log("vendor not found");
+      return res.status(404).json({ message: "vendor not found" });
+    }
+    findVendor.is_approved = true;
+    await findVendor.save();
+    res.status(200).json({
+      message: "vendor approved successfully",
+      approval_status: findVendor.is_approved,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.vendorDisapprove = async (req, res) => {
+  try {
+    let vendorId = req.params.id;
+    let findVendor = await vendorSchema.findOne({ _id: vendorId });
+    if (!findVendor) {
+      console.log("vendor not found");
+      return res.status(404).json({ message: "vendor not found" });
+    }
+    findVendor.is_approved = false;
+    await findVendor.save();
+    res.status(200).json({
+      message: "vendor disapproved successfully",
+      approval_status: findVendor.is_approved,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

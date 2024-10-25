@@ -18,6 +18,11 @@ const {
   getVendorByServiceName,
   addServiceUserBusinessDetails,
   addAdditionalServices,
+  writeServiceReview,
+  getServiceReview,
+  vendorDisapprove,
+  vendorApprove,
+  getAllVendorsForAdmin,
 } = require("../../controllers/vendor/vendorController");
 // const authMiddleware = require("../../controllers/middleware/authMiddleware");
 const multer = require("multer");
@@ -88,5 +93,10 @@ router.put(
   uploadAdditional.fields([{ name: "additional_images", maxCount: 6 }]),
   addAdditionalServices
 );
+router.put("/write-review/:id", writeServiceReview);
+router.get("/get-service-review/:id", getServiceReview);
 
+router.put("/vendor-approve/:id", vendorApprove);
+router.put("/vendor-disapprove/:id", vendorDisapprove);
+router.get("/get-all-vendors-for-admin", getAllVendorsForAdmin);
 module.exports = router;

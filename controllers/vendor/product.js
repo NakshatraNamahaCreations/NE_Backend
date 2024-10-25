@@ -222,6 +222,36 @@ exports.getAllSellProduct = async (req, res) => {
   }
 };
 
+exports.getRentalProductForAdmin = async (req, res) => {
+  try {
+    const allRentalProduct = await productSchema.find({
+      product_type: "rental",
+    });
+
+    if (allRentalProduct.length < 0) {
+      return res.status(404).json({ message: "products not found" });
+    }
+    res.status(200).json({ allRentalProduct: allRentalProduct });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getAllSellForAdminProduct = async (req, res) => {
+  try {
+    const allSellProduct = await productSchema.find({ product_type: "sell" });
+
+    if (allSellProduct.length < 0) {
+      return res.status(404).json({ message: "products not found" });
+    }
+    res.status(200).json({ allSellProduct: allSellProduct });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.writeReview = async (req, res) => {
   // console.log("api hitting");
   try {
@@ -267,5 +297,45 @@ exports.writeReview = async (req, res) => {
     res.status(200).json({ message: "Review added successfully", findProduct });
   } catch (error) {
     console.error(error);
+  }
+};
+
+// approval_status
+exports.approveProduct = async (req, res) => {
+  try {
+    let productId = req.params.id;
+    let findProduct = await productSchema.findOne({ _id: productId });
+    if (!findProduct) {
+      console.log("Product not found");
+      return res.status(404).json({ message: "product not found" });
+    }
+    findProduct.approval_status = true;
+    await findProduct.save();
+    res.status(200).json({
+      message: "Product approved successfully",
+      approval_status: findProduct.approval_status,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.disApproveProduct = async (req, res) => {
+  try {
+    let productId = req.params.id;
+    let findProduct = await productSchema.findOne({ _id: productId });
+    if (!findProduct) {
+      console.log("Product not found");
+      return res.status(404).json({ message: "product not found" });
+    }
+    findProduct.approval_status = false;
+    await findProduct.save();
+    res
+      .status(200)
+      .json({ message: "Product disapproved successfully", findProduct });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };

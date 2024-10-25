@@ -78,6 +78,19 @@ const vendorSchema = new mongoose.Schema({
       end_time: String,
     },
   ],
+  Reviews: [
+    {
+      user_id: String,
+      user_name: String,
+      review_title: String,
+      review_description: String,
+      ratings: Number,
+      review_on: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
   additional_services: Array,
   additional_images: [String],
   address: [addressSchema],

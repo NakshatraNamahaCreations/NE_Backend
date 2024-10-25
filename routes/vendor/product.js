@@ -11,6 +11,10 @@ const {
   filteroutVendorProduct,
   getVendorProduct,
   getParticularVendorProduct,
+  approveProduct,
+  disApproveProduct,
+  getAllSellForAdminProduct,
+  getRentalProductForAdmin,
 } = require("../../controllers/vendor/product");
 const multer = require("multer");
 
@@ -62,5 +66,11 @@ router.get("/getsellproduct", getAllSellProduct);
 router.get("/getvendorproduct/:id", getVendorProduct);
 router.put("/review/:id", writeReview);
 router.get("/getreview/:id", getReview);
+
+router.get("/get-rental-product-for-admin", getRentalProductForAdmin);
+router.get("/get-all-sell-product-for-admin", getAllSellForAdminProduct);
+
+router.put("/product-approved/:id", approveProduct);
+router.put("/product-disapproved/:id", disApproveProduct);
 
 module.exports = router;

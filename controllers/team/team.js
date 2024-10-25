@@ -6,12 +6,18 @@ exports.createTeam = async (req, res) => {
       member_name,
       mobile_number,
       password,
-      dashboard,
-      // banner,
-      booking_management,
-      user_management,
-      vendor_management,
-      team_management,
+      dashboard_management,
+      banner_management,
+      service_management,
+      subservice_management,
+      requirement_management,
+      userbooking_management,
+      vendororder_management,
+      manage_user,
+      manage_vendor,
+      manage_teammemebrs,
+      manage_sellproducts,
+      manage_rentalproducts,
     } = req.body;
 
     const existingMobileNumber = await teamSchema.findOne({ mobile_number });
@@ -23,12 +29,18 @@ exports.createTeam = async (req, res) => {
       member_name,
       mobile_number,
       password,
-      dashboard,
-      // banner,
-      booking_management,
-      user_management,
-      vendor_management,
-      team_management,
+      dashboard_management,
+      banner_management,
+      service_management,
+      subservice_management,
+      requirement_management,
+      userbooking_management,
+      vendororder_management,
+      manage_user,
+      manage_vendor,
+      manage_teammemebrs,
+      manage_sellproducts,
+      manage_rentalproducts,
     });
     await newUser.save();
     res.status(200).json({ message: "User registered successfully", newUser });
@@ -105,12 +117,18 @@ exports.updateUser = async (req, res) => {
       member_name,
       mobile_number,
       password,
-      dashboard,
-      // banner,
-      booking_management,
-      user_management,
-      vendor_management,
-      team_management,
+      dashboard_management,
+      banner_management,
+      service_management,
+      subservice_management,
+      requirement_management,
+      userbooking_management,
+      vendororder_management,
+      manage_user,
+      manage_vendor,
+      manage_teammemebrs,
+      manage_sellproducts,
+      manage_rentalproducts,
     } = req.body;
     const memberId = req.params.id;
     const user = await teamSchema.findOne({ _id: memberId });
@@ -120,12 +138,24 @@ exports.updateUser = async (req, res) => {
     user.member_name = member_name || user.member_name;
     user.mobile_number = mobile_number || user.mobile_number;
     user.password = password || user.password;
-    user.dashboard = dashboard || user.dashboard;
-    // // // user.banner = banner || user.banner;
-    user.booking_management = booking_management || user.booking_management;
-    user.user_management = user_management || user.user_management;
-    user.vendor_management = vendor_management || user.vendor_management;
-    user.team_management = team_management || user.team_management;
+    user.dashboard_management =
+      dashboard_management || user.dashboard_management;
+    user.banner_management = banner_management || user.banner_management;
+    user.service_management = service_management || user.service_management;
+    user.subservice_management =
+      subservice_management || user.subservice_management;
+    user.requirement_management =
+      requirement_management || user.requirement_management;
+    user.userbooking_management =
+      userbooking_management || user.userbooking_management;
+    user.vendororder_management =
+      vendororder_management || user.vendororder_management;
+    user.manage_user = manage_user || user.manage_user;
+    user.manage_vendor = manage_vendor || user.manage_vendor;
+    user.manage_teammemebrs = manage_teammemebrs || user.manage_teammemebrs;
+    user.manage_sellproducts = manage_sellproducts || user.manage_sellproducts;
+    user.manage_rentalproducts =
+      manage_rentalproducts || user.manage_rentalproducts;
     let updateUser = await teamSchema.findOneAndUpdate(
       { _id: memberId },
       user,
