@@ -126,3 +126,29 @@ exports.deleteService = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.updateStatus = async (req, res) => {
+  try {
+    const service_id = req.params.id;
+    const findService = await serviceSchema.findOne({ _id: service_id });
+
+    if (!findService) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Service not found" });
+    }
+
+    // Toggle the isActive status
+    findService.isActive = !findService.isActive;
+
+    // Save the updated status
+    await findService.save();
+
+    return res.status(200).json({
+      status: true,
+      message: `Service ${findService.isActive ? "Activated" : "Inactivated"}`,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

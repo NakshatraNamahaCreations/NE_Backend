@@ -8,6 +8,7 @@ const {
   getAllService,
   deleteService,
   addRequirements,
+  updateStatus,
   // writeServiceReview,
   // getReview,
 } = require("../../controllers/service/service");
@@ -39,5 +40,6 @@ router.get("/get-service-by-servicename/:name", getServiceByServiceName);
 router.post("/add-service-via-excel", addServicesViaExcel);
 router.get("/get-all-service", getAllService);
 router.delete("/delete-service/:id", deleteService);
+router.put("/update-status/:id", updateStatus);
 
 module.exports = router;

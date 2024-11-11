@@ -5,6 +5,7 @@ const {
   register,
   login,
   getProfile,
+  getAllUser,
   updateProfile,
   addAddress,
   deleteUser,
@@ -15,6 +16,7 @@ const {
 router.post("/refresh-token", refreshToken);
 router.post("/user-register", register);
 router.post("/user-login", login);
+router.get("/get-all-user", getAllUser);
 router.get("/get-user-profile/:id", getProfile);
 router.put("/update-profile/:id", updateProfile);
 router.put("/save-delivery-address/:id", addAddress);

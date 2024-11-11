@@ -96,22 +96,19 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// Controller for updating user profile
-// exports.updateProfile = async (req, res) => {
-//   try {
-//     const updates = req.body;
-//     const user = await UserSchema.findByIdAndUpdate(req.params.id, updates, {
-//       new: true,
-//     }).select("-password");
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-//     res.json(user);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
+exports.getAllUser = async (req, res) => {
+  try {
+    const user = await UserSchema.find().select("-password");
+    if (user.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    } else {
+      return res.status(200).json(user);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 exports.updateProfile = async (req, res) => {
   try {

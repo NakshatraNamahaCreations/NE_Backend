@@ -64,6 +64,37 @@ exports.getTeam = async (req, res) => {
   }
 };
 
+exports.teamUserLogin = async (req, res) => {
+  const { mobile_number, password } = req.body;
+  try {
+    if (!mobile_number || !password) {
+      return res
+        .status(400)
+        .json({ error: "Mobile number and password are required" });
+    }
+
+    const user = await teamSchema.findOne({ mobile_number });
+    if (!user) {
+      return res.status(400).json({ message: "Mobile number does not match" });
+    }
+    if (user.password !== password) {
+      return res.status(400).json({ message: "Incorrect password" });
+    }
+    if (user.isBlocked === true) {
+      return res.status(400).json({
+        message: "Your account has been blocked by admin",
+      });
+    }
+    res.status(200).json({
+      message: "Login Success",
+      user: user,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.getUser = async (req, res) => {
   try {
     const memberId = req.params.id;
@@ -171,5 +202,20 @@ exports.updateUser = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.deleteTeamUser = async (req, res) => {
+  try {
+    const _id = req.params.id;
+    const teamUser = await teamSchema.findByIdAndDelete(_id);
+    if (!teamUser) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+    return res
+      .status(200)
+      .send({ status: true, success: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };

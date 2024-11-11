@@ -28,6 +28,9 @@ const service = require("./routes/service/service");
 const subService = require("./routes/service/sub-service");
 // user
 const userorder = require("./routes/user/Order");
+const banners = require("./routes/banner/banner");
+const faq = require("./routes/article/faq");
+const raiseTicket = require("./routes/ticketing/ticket");
 
 const { default: axios } = require("axios");
 // Middleware
@@ -48,8 +51,9 @@ app.use("/api/service", service);
 app.use("/api/sub-service", subService);
 // user
 app.use("/api/user-order", userorder);
-
-// app.use("/api/users", require("./routes/users"));
+app.use("/api/banners", banners);
+app.use("/api/faq", faq);
+app.use("/api/ticket", raiseTicket);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

@@ -4,6 +4,9 @@ const {
   userOrder,
   getUserOrder,
   getAllOrder,
+  getOrderByOrderId,
+  cancelOrder,
+  returnOrder,
 } = require("../../controllers/user/Order");
 const path = require("path");
 const multer = require("multer");
@@ -33,5 +36,8 @@ router.post(
 );
 router.get("/get-a-order/:id", getUserOrder);
 router.get("/getallorder", getAllOrder);
+router.get("/get-order-by-order-id/:id", getOrderByOrderId);
+router.put("/cancel-order/:id", cancelOrder);
+router.put("/return-order/:id", returnOrder);
 
 module.exports = router;

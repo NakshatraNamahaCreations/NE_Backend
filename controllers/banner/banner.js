@@ -2,11 +2,9 @@ const bannerSchema = require("../../models/banner/banner");
 
 exports.createBanner = async (req, res) => {
   try {
-    const { banner_type } = req.body;
     let file = req.file?.filename;
     const banner = new bannerSchema({
-      banner_type,
-      bannerImage: file,
+      banner_image: file,
     });
     if (!file) {
       return res.status(500).json({
@@ -17,7 +15,7 @@ exports.createBanner = async (req, res) => {
     await banner.save();
     res.status(200).json({
       status: true,
-      success: "banner created successfully",
+      success: "Bnner created successfully",
       data: banner,
     });
   } catch (error) {
@@ -27,8 +25,12 @@ exports.createBanner = async (req, res) => {
 
 exports.getBanners = async (req, res) => {
   try {
-    let data = await bannerSchema.find();
-    res.status(200).json({ message: "success", data: data });
+    const data = await bannerSchema.find();
+    if (data.length < 0) {
+      return res.status(404).json({ message: "banner's not found" });
+    } else {
+      res.status(200).json({ message: "success", data: data });
+    }
   } catch (err) {
     console.log("error", err);
     res.status(400).json({ message: "fail" });

@@ -71,6 +71,8 @@ exports.userOrder = async (req, res) => {
       user_id,
       user_name,
       event_date,
+      event_start_date,
+      event_end_date,
       number_of_days,
       event_name,
       ordered_date,
@@ -105,6 +107,8 @@ exports.userOrder = async (req, res) => {
       user_id,
       user_name,
       event_date,
+      event_start_date,
+      event_end_date,
       number_of_days,
       event_name,
       ordered_date,
@@ -142,6 +146,77 @@ exports.getUserOrder = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
     res.status(200).json({ userOrder });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getOrderByOrderId = async (req, res) => {
+  try {
+    const orderId = await UserOrder.findOne({
+      _id: String(req.params.id),
+    });
+    if (!orderId) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    res.status(200).json({ orderId });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.cancelOrder = async (req, res) => {
+  try {
+    const { cancel_reason, cancelled_date } = req.body;
+    const order = await UserOrder.findOne({ _id: req.params.id });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    const updateStatus = await UserOrder.updateOne(
+      { _id: req.params.id },
+      {
+        $set: {
+          order_status: "Order Cancelled",
+          cancel_reason: cancel_reason || "No reason provided",
+          cancelled_date: cancelled_date || new Date(),
+        },
+      }
+    );
+    res.status(200).json({ status: "Order Cancelled", order: updateStatus });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.returnOrder = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const { return_reason, reason_command, returned_date } = req.body;
+
+    const findOrder = await UserOrder.findOne({ _id: orderId });
+
+    if (!findOrder) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    const updateOrder = await UserOrder.updateOne(
+      { _id: orderId },
+      {
+        $set: {
+          order_status: "Order Returned",
+          return_reason,
+          reason_command,
+          returned_date,
+        },
+      }
+    );
+    if (updateOrder.nModified === 0) {
+      return res.status(400).json({ message: "Failed to return the order" });
+    }
+    const updatedOrder = await UserOrder.findOne({ _id: orderId });
+    res.status(200).json({ message: "Order returned", order: updatedOrder });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
