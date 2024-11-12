@@ -18,7 +18,7 @@ const {
   getVendorByServiceName,
   addServiceUserBusinessDetails,
   addAdditionalServices,
-  writeServiceReview,
+  writeReview,
   getServiceReview,
   vendorDisapprove,
   vendorApprove,
@@ -93,7 +93,7 @@ router.put(
   uploadAdditional.fields([{ name: "additional_images", maxCount: 6 }]),
   addAdditionalServices
 );
-router.put("/write-review/:id", writeServiceReview);
+router.put("/write-review/:id", writeReview);
 router.get("/get-service-review/:id", getServiceReview);
 
 router.put("/vendor-approve/:id", vendorApprove);

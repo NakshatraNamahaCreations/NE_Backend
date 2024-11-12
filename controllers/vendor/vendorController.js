@@ -522,7 +522,7 @@ exports.getVendorByServiceName = async (req, res) => {
   }
 };
 
-exports.writeServiceReview = async (req, res) => {
+exports.writeReview = async (req, res) => {
   try {
     const { user_id, user_name, review_title, review_description, ratings } =
       req.body;
