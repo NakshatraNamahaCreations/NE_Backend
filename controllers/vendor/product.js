@@ -2,8 +2,14 @@ const productSchema = require("../../models/vendor/product");
 
 exports.addProduct = async (req, res) => {
   try {
-    console.log(req.body);
-    console.log(req.files);
+    // console.log("Product image paths:", req.body.product_image); // Debug log
+    // console.log("Product video path:", req.body.product_video); // Debug log
+
+    // Ensure product_image and product_video are passed correctly
+    if (!req.body.product_image || !Array.isArray(req.body.product_image)) {
+      return res.status(400).json({ message: "Product images are required" });
+    }
+
     const {
       shop_name,
       vendor_id,
@@ -11,8 +17,6 @@ exports.addProduct = async (req, res) => {
       product_category,
       product_type,
       product_name,
-      // product_image,
-      //   product_video,
       product_price,
       mrp_rate,
       discount,
@@ -29,6 +33,7 @@ exports.addProduct = async (req, res) => {
       Specifications,
       retuning_date,
     } = req.body;
+
     // Ensure Specifications are in the correct format
     let specificationsArray;
     try {
@@ -47,8 +52,8 @@ exports.addProduct = async (req, res) => {
         .json({ message: "Add atleast one specifications" });
     }
     // Process images and video
-    const product_image = req.files.images.map((file) => file.path);
-    const product_video = req.files.video ? req.files.video[0].path : null;
+    // const product_image = req.files.images.map((file) => file.path);
+    // const product_video = req.files.video ? req.files.video[0].path : null;
     // Create a new product
     const newProduct = new productSchema({
       shop_name,
@@ -57,9 +62,8 @@ exports.addProduct = async (req, res) => {
       product_category,
       product_type,
       product_name,
-      product_image,
-      product_video,
-      product_price,
+      product_image: req.body.product_image, // Use the value assigned in middleware
+      product_video: req.body.product_video, // Use the value assigned in middleware
       mrp_rate,
       discount,
       brand,
@@ -300,6 +304,32 @@ exports.writeReview = async (req, res) => {
   }
 };
 
+exports.productStatusChange = async (req, res) => {
+  try {
+    const product_id = req.params.id;
+    const findProduct = await productSchema.findOne({ _id: product_id });
+
+    if (!findProduct) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Product not found" });
+    }
+
+    // Toggle the isActive status
+    findProduct.isActive = !findProduct.isActive;
+
+    // Save the updated status
+    await findProduct.save();
+
+    return res.status(200).json({
+      status: true,
+      message: `Product ${findProduct.isActive ? "Activated" : "Inactivated"}`,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // approval_status
 exports.approveProduct = async (req, res) => {
   try {
@@ -323,6 +353,7 @@ exports.approveProduct = async (req, res) => {
 
 exports.disApproveProduct = async (req, res) => {
   try {
+    const { reason_for_disapprove } = req.body;
     let productId = req.params.id;
     let findProduct = await productSchema.findOne({ _id: productId });
     if (!findProduct) {
@@ -330,10 +361,30 @@ exports.disApproveProduct = async (req, res) => {
       return res.status(404).json({ message: "product not found" });
     }
     findProduct.approval_status = false;
+    findProduct.isActive = false;
+    findProduct.reason_for_disapprove = reason_for_disapprove;
     await findProduct.save();
     res
       .status(200)
       .json({ message: "Product disapproved successfully", findProduct });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.deleteProduct = async (req, res) => {
+  try {
+    const deletedProduct = await productSchema.findOneAndDelete({
+      _id: req.params.id,
+    });
+    if (!deletedProduct) {
+      return res.status(404).json({ message: "product not found" });
+    }
+    res.status(200).json({
+      message: "Product deleted successfully",
+      product: deletedProduct,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

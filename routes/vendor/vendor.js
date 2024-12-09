@@ -1,5 +1,7 @@
 const express = require("express");
 const { refreshToken } = require("../../controllers/authController");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { Upload } = require("@aws-sdk/lib-storage");
 const router = express.Router();
 const {
   vendorRegister,
@@ -22,63 +24,158 @@ const {
   getServiceReview,
   vendorDisapprove,
   vendorApprove,
+  vendorStatus,
   getAllVendorsForAdmin,
+  addCommissions,
+  deleteVendor,
 } = require("../../controllers/vendor/vendorController");
-// const authMiddleware = require("../../controllers/middleware/authMiddleware");
 const multer = require("multer");
-
 const path = require("path");
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, "public/vendor_profile/");
+//   },
+//   filename: function (req, file, cb) {
+//     cb(null, Date.now() + path.extname(file.originalname));
+//   },
+// });
+// const upload = multer({ storage: storage });
+// const additionalStorage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, "public/additional_images/");
+//   },
+//   filename: function (req, file, cb) {
+//     cb(null, Date.now() + path.extname(file.originalname));
+//   },
+// });
+// const uploadAdditional = multer({ storage: additionalStorage });
 
-// Configure storage for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "public/vendor_profile/");
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
+// ,....................
+
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
 });
-const upload = multer({ storage: storage });
 
-const additionalStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "public/additional_images/");
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
+const storage = multer.memoryStorage();
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
 
-const uploadAdditional = multer({ storage: additionalStorage });
+const uploadToS3 = async (req, res, next) => {
+  try {
+    if (!req.files) {
+      throw new Error("No files provided");
+    }
 
-// Route for refreshing token
+    // console.log("req.files:", req.files);
+
+    const uploadedFiles = {};
+    for (const [key, files] of Object.entries(req.files)) {
+      uploadedFiles[key] = await Promise.all(
+        files.map(async (file) => {
+          const uploadParams = {
+            Bucket: process.env.AWS_S3_BUCKET_NAME,
+            Key: `vendor_profile/${Date.now()}-${file.originalname}`,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+          };
+
+          const uploader = new Upload({
+            client: s3,
+            params: uploadParams,
+          });
+
+          const uploadResult = await uploader.done();
+          return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+        })
+      );
+    }
+    // console.log("Uploaded files:", uploadedFiles);
+
+    // Assign the uploaded URLs to req.body fields
+    req.body.shop_image_or_logo = uploadedFiles.shop_image_or_logo
+      ? uploadedFiles.shop_image_or_logo[0] // Only one file expected
+      : null;
+    req.body.vehicle_image = uploadedFiles.vehicle_image
+      ? uploadedFiles.vehicle_image[0] // Only one file expected
+      : null;
+
+    next();
+  } catch (error) {
+    console.error("Upload error:", error);
+    res
+      .status(500)
+      .json({ error: "File upload failed", details: error.message });
+  }
+};
+
+// Additonal image
+const uploadToS3ForAdditionalImages = async (req, res, next) => {
+  try {
+    console.log("req.files:", req.files);
+
+    if (!req.files || !req.files.additional_images) {
+      throw new Error("No files provided");
+    }
+
+    const uploadedFiles = await Promise.all(
+      req.files.additional_images.map(async (file) => {
+        const uploadParams = {
+          Bucket: process.env.AWS_S3_BUCKET_NAME,
+          Key: `additional_images/${Date.now()}-${file.originalname}`,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+        };
+
+        const uploader = new Upload({
+          client: s3,
+          params: uploadParams,
+        });
+
+        const uploadResult = await uploader.done();
+        const fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+        console.log("Uploaded File URL:", fileUrl); // Debug the uploaded file URL
+        return fileUrl;
+      })
+    );
+
+    console.log("Uploaded Files Array:", uploadedFiles);
+    req.body.additional_images = uploadedFiles; // Attach the array of URLs to req.body
+
+    next();
+  } catch (error) {
+    console.error("Upload error:", error);
+    res
+      .status(500)
+      .json({ error: "File upload failed", details: error.message });
+  }
+};
+
 router.post("/refresh-token", refreshToken);
 router.post("/register", vendorRegister);
 router.put(
   "/add-vendor-business-details/:id",
   upload.fields([
     { name: "shop_image_or_logo", maxCount: 1 },
-    { name: "vehicle_image", maxCount: 1 },
+    { name: "vehicle_image", maxCount: 1 }, //vendor profile
   ]),
+  uploadToS3,
   addVendorBusinessDetails
 );
 
 router.post("/login", vendorLogin);
 router.put(
   "/add-service-user-business-details/:id",
-  upload.fields([{ name: "shop_image_or_logo", maxCount: 1 }]),
+  upload.fields([{ name: "shop_image_or_logo", maxCount: 1 }]), //vendor profile
+  uploadToS3,
   addServiceUserBusinessDetails
 );
-// router.post(
-//   "/save-vendor-details/:id",
-//   uploadAdditional.fields([{ name: "shop_image_or_logo", maxCount: 5 }]),
-//   addServiceRequiredFields
-// );
-// router.put(
-//   "/add-service-additional-details/:id",
-//   upload1.fields([{ name: "images", maxCount: 5 }]),
-//   addServiceAdditionalDetails
-// );
 
 router.post("/loginwithmobilenumber", loginWithMobile);
 router.get("/getprofile/:id", getVendorProfile);
@@ -90,13 +187,17 @@ router.delete("/delete-vendor-profile", deleteVendorProfile);
 router.put("/add-address/:id", addAddress);
 router.put(
   "/add-additional-services/:id",
-  uploadAdditional.fields([{ name: "additional_images", maxCount: 6 }]),
-  addAdditionalServices
+  upload.fields([{ name: "additional_images", maxCount: 6 }]),
+  uploadToS3ForAdditionalImages,
+  addAdditionalServices //additional_images
 );
 router.put("/write-review/:id", writeReview);
 router.get("/get-service-review/:id", getServiceReview);
-
 router.put("/vendor-approve/:id", vendorApprove);
+router.put("/vendor-Status/:id", vendorStatus);
 router.put("/vendor-disapprove/:id", vendorDisapprove);
 router.get("/get-all-vendors-for-admin", getAllVendorsForAdmin);
+router.put("/add-commissions/:id", addCommissions);
+router.delete("/delete-vendor/:id", deleteVendor);
+
 module.exports = router;

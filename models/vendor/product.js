@@ -11,6 +11,8 @@ const productSchema = new mongoose.Schema(
     product_category: String,
     product_price: Number,
     approval_status: Boolean,
+    isActive: Boolean,
+    reason_for_disapprove: String,
     mrp_rate: Number,
     discount: Number,
     brand: String,

@@ -94,6 +94,19 @@ exports.getAllService = async (req, res) => {
     res.status(400).json({ message: "fail" });
   }
 };
+
+exports.getActiveService = async (req, res) => {
+  try {
+    let data = await serviceSchema.find({
+      isActive: true,
+    });
+    return res.status(200).json({ message: "success", data: data });
+  } catch (err) {
+    console.log("error", err);
+    res.status(400).json({ message: "fail" });
+  }
+};
+
 exports.getServiceByServiceName = async (req, res) => {
   try {
     const serviceName = req.params.name;
@@ -150,5 +163,34 @@ exports.updateStatus = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.deleteRequirementField = async (req, res) => {
+  try {
+    const { unique_id } = req.params; // Get unique_id from request params
+    const { serviceId } = req.body; // Get service ID from request body
+
+    // Find the service by ID
+    const service = await serviceSchema.findOne({ _id: serviceId });
+    if (!service) {
+      return res.status(404).json({ message: "Service not found" });
+    }
+
+    // Filter out the requirement_fields matching the unique_id
+    service.requirement_fields = service.requirement_fields.filter(
+      (field) => field.unique_id !== parseInt(unique_id) // Ensure unique_id is compared as a number
+    );
+
+    // Save the updated service
+    await service.save();
+
+    res.status(200).json({
+      message: "Requirement field deleted successfully",
+      service,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
   }
 };

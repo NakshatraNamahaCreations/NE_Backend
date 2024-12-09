@@ -11,9 +11,11 @@ exports.createTicket = async (req, res) => {
       product_id,
       product_name,
       ticket_created_date,
+      vendor_name,
+      vendor_id,
     } = req.body;
 
-    const attachmentFile = `public/ticket/${req.file.filename}`;
+    // const attachmentFile = `public/ticket/${req.file.filename}`;
 
     const newTicket = new ticketSchema({
       user_id: user_id,
@@ -23,8 +25,10 @@ exports.createTicket = async (req, res) => {
       ticket_command: ticket_command,
       product_id: product_id,
       product_name: product_name,
-      attachment_file: attachmentFile,
+      attachment_file: req.body.attachment_file,
       ticket_created_date: ticket_created_date,
+      vendor_name: vendor_name,
+      vendor_id: vendor_id,
       ticket_status: "Created",
     });
     await newTicket.save();
@@ -69,7 +73,7 @@ exports.getTicketById = async (req, res) => {
 
 exports.changeTicketStatus = async (req, res) => {
   try {
-    const { ticket_status } = req.body;
+    const { ticket_status, remark, update_date } = req.body;
     let ticketId = req.params.id;
     let findTicket = await ticketSchema.findOne({ _id: ticketId });
     if (!findTicket) {
@@ -77,6 +81,8 @@ exports.changeTicketStatus = async (req, res) => {
       return res.status(404).json({ message: "ticket not found" });
     }
     findTicket.ticket_status = ticket_status;
+    findTicket.remark = remark;
+    findTicket.update_date = update_date;
     await findTicket.save();
     res.status(200).json({
       message: "Status Changed",

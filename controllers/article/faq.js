@@ -71,3 +71,27 @@ exports.deleteFaq = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.updateFaqStatus = async (req, res) => {
+  try {
+    const faqId = req.params.id;
+    const findFaq = await faqSchema.findOne({ _id: faqId });
+
+    if (!findFaq) {
+      return res.status(404).json({ status: false, message: "FAQ not found" });
+    }
+
+    // Toggle the isActive status
+    findFaq.isActive = !findFaq.isActive;
+
+    // Save the updated status
+    await findFaq.save();
+
+    return res.status(200).json({
+      status: true,
+      message: `FAQ ${findFaq.isActive ? "Activated" : "Inactivated"}`,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

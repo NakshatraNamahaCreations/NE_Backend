@@ -31,6 +31,15 @@ const userorder = require("./routes/user/Order");
 const banners = require("./routes/banner/banner");
 const faq = require("./routes/article/faq");
 const raiseTicket = require("./routes/ticketing/ticket");
+const TermsCondition = require("./routes/article/termsandconsition");
+const userTnC = require("./routes/article/termsandconsitionUser");
+const payouts = require("./routes/payouts/payout");
+const state = require("./routes/master/state");
+const city = require("./routes/master/city");
+const address = require("./routes/master/address");
+const youtube = require("./routes/article/youtube");
+const companyProfile = require("./routes/master/company_profile");
+const payoutConfig = require("./routes/master/payout_config");
 
 const { default: axios } = require("axios");
 // Middleware
@@ -49,11 +58,19 @@ app.use("/api/order", order);
 app.use("/api/team", team);
 app.use("/api/service", service);
 app.use("/api/sub-service", subService);
-// user
 app.use("/api/user-order", userorder);
 app.use("/api/banners", banners);
 app.use("/api/faq", faq);
 app.use("/api/ticket", raiseTicket);
+app.use("/api/tnc", TermsCondition);
+app.use("/api/payouts", payouts);
+app.use("/api/state", state);
+app.use("/api/city", city);
+app.use("/api/address", address);
+app.use("/api/youtube", youtube);
+app.use("/api/company-profile", companyProfile);
+app.use("/api/payout-config", payoutConfig);
+app.use("/api/user-tnc", userTnC);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

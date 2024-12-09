@@ -42,7 +42,7 @@ const vendorSchema = new mongoose.Schema({
     trim: true,
   },
   mobile_number: {
-    type: Number,
+    type: String,
     required: true,
     unique: true,
   },
@@ -66,11 +66,15 @@ const vendorSchema = new mongoose.Schema({
   vehicle_image: String,
   vehicle_by: String,
   is_approved: Boolean,
+  reason_for_disapprove: String,
+  isActive: Boolean,
   // requirement_fields: Array,
   pricing: Number,
   experience_in_business: String,
   year_of_establishment: String,
   website_url: String,
+  commission_percentage: Number,
+  commission_tax: Number,
   business_hours: [
     {
       day: String,

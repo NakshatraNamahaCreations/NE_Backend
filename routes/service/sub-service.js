@@ -6,12 +6,15 @@ const {
   // getSubserviceByService,
   getAllSubService,
   deleteSubService,
+  updateStatus,
+  getActiveSubService,
 } = require("../../controllers/service/sub-service");
 
 router.post("/add-sub-service", addSubService);
 // router.post("/add-service-via-excel", addServicesViaExcel);
-// router.get("/get-all-service", getAllService);
+router.get("/get-active-sub-service", getActiveSubService);
 router.get("/get-all-sub-service", getAllSubService);
 router.delete("/delete-sub-service/:id", deleteSubService);
+router.put("/update-sub-service-status/:id", updateStatus);
 
 module.exports = router;

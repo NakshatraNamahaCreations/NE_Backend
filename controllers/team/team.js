@@ -5,6 +5,7 @@ exports.createTeam = async (req, res) => {
     const {
       member_name,
       mobile_number,
+      email_id,
       password,
       dashboard_management,
       banner_management,
@@ -29,6 +30,7 @@ exports.createTeam = async (req, res) => {
       member_name,
       mobile_number,
       password,
+      email_id,
       dashboard_management,
       banner_management,
       service_management,
@@ -147,6 +149,7 @@ exports.updateUser = async (req, res) => {
     const {
       member_name,
       mobile_number,
+      email_id,
       password,
       dashboard_management,
       banner_management,
@@ -169,6 +172,7 @@ exports.updateUser = async (req, res) => {
     user.member_name = member_name || user.member_name;
     user.mobile_number = mobile_number || user.mobile_number;
     user.password = password || user.password;
+    user.email_id = email_id || user.email_id;
     user.dashboard_management =
       dashboard_management || user.dashboard_management;
     user.banner_management = banner_management || user.banner_management;

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const TermsConditionSchema = new mongoose.Schema({
+const TermsConditionUserSchema = new mongoose.Schema({
   termsContent: {
     type: String,
   },
@@ -9,11 +9,10 @@ const TermsConditionSchema = new mongoose.Schema({
     default: "terms",
     unique: true,
   },
-  userType: String,
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-module.exports = mongoose.model("TermsCondition", TermsConditionSchema);
+module.exports = mongoose.model("TermsConditionUser", TermsConditionUserSchema);

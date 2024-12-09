@@ -12,6 +12,10 @@ const ticketSchema = new mongoose.Schema(
     attachment_file: String,
     ticket_created_date: String,
     ticket_status: String,
+    vendor_name: String,
+    vendor_id: String,
+    update_date: String,
+    remark: String,
   },
   {
     timestamps: true,

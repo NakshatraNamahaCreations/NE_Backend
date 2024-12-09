@@ -55,9 +55,7 @@ exports.vendorRegister = async (req, res) => {
 exports.addVendorBusinessDetails = async (req, res) => {
   try {
     const vendorId = req.params.id;
-    console.log("vendorId", vendorId);
     const findVendor = await vendorSchema.findOne({ _id: vendorId });
-    console.log("findVendor", findVendor);
     if (!findVendor) {
       return res.status(404).json({ message: "Vendor not found" });
     }
@@ -72,16 +70,6 @@ exports.addVendorBusinessDetails = async (req, res) => {
       vehicle_by,
     } = req.body;
 
-    const shopImageOrLogo = req.files["shop_image_or_logo"]
-      ? req.files["shop_image_or_logo"][0].path
-      : null;
-    const vehicleImage = req.files["vehicle_image"]
-      ? req.files["vehicle_image"][0].path
-      : null;
-
-    // console.log("Request Body:", req.body);
-    // console.log("Request Files:", req.files);
-
     const updatedVendor = await vendorSchema.findByIdAndUpdate(
       vendorId,
       {
@@ -93,8 +81,8 @@ exports.addVendorBusinessDetails = async (req, res) => {
         vehicle_name: vehicle_name,
         number_plate: number_plate,
         vehicle_by: vehicle_by,
-        shop_image_or_logo: shopImageOrLogo,
-        vehicle_image: vehicleImage,
+        shop_image_or_logo: req.body.shop_image_or_logo,
+        vehicle_image: req.body.vehicle_image,
       },
       { new: true }
     );
@@ -105,7 +93,6 @@ exports.addVendorBusinessDetails = async (req, res) => {
 
     res.status(200).json({
       message: "Shop details added successfully! Please add business address",
-      // message: "Shop details updated successfully",
       vendorShop: updatedVendor,
     });
   } catch (error) {
@@ -133,9 +120,9 @@ exports.addServiceUserBusinessDetails = async (req, res) => {
       shop_name,
     } = req.body;
 
-    const shopImageOrLogo = req.files["shop_image_or_logo"]
-      ? req.files["shop_image_or_logo"][0].path
-      : null;
+    // const shopImageOrLogo = req.body.shop_image_or_logo
+    //   ? req.body.shop_image_or_logo
+    //   : null;
 
     const parsedBusinessHours = Array.isArray(business_hours)
       ? business_hours
@@ -151,7 +138,7 @@ exports.addServiceUserBusinessDetails = async (req, res) => {
         gst_number: gst_number,
         business_hours: parsedBusinessHours,
         experience_in_business: experience_in_business,
-        shop_image_or_logo: shopImageOrLogo,
+        shop_image_or_logo: req.body.shop_image_or_logo,
       },
       { new: true }
     );
@@ -170,15 +157,13 @@ exports.addAdditionalServices = async (req, res) => {
   try {
     const userId = req.params.id;
 
-    // Find the user by ID
     const findUser = await vendorSchema.findOne({ _id: userId });
     if (!findUser) {
       return res.status(401).json({ message: "User not found" });
     }
 
-    const { additional_services } = req.body;
+    const { additional_services, additional_images } = req.body;
 
-    // Ensure that additional_services is a valid JSON string
     let fieldsObj;
     try {
       fieldsObj = JSON.parse(additional_services);
@@ -188,22 +173,18 @@ exports.addAdditionalServices = async (req, res) => {
         .json({ message: "Invalid additional services format" });
     }
 
-    // Start with the user's existing additional_services, if any
     const updatedFields = Array.isArray(findUser.additional_services)
       ? [...findUser.additional_services]
       : [];
 
-    // Iterate over the incoming fields and update existing or add new fields
     Object.keys(fieldsObj).forEach((parameter) => {
       const existingFieldIndex = updatedFields.findIndex(
         (field) => field.parameter === parameter
       );
 
       if (existingFieldIndex !== -1) {
-        // Update existing field value
         updatedFields[existingFieldIndex].value = fieldsObj[parameter];
       } else {
-        // Add new field if it doesn't exist
         updatedFields.push({
           parameter: parameter,
           value: fieldsObj[parameter],
@@ -211,23 +192,25 @@ exports.addAdditionalServices = async (req, res) => {
       }
     });
 
-    // Update the user's additional_services field
     findUser.additional_services = updatedFields;
 
-    // Process uploaded images (if any)
-    if (req.files && req.files.additional_images) {
-      const service_images = req.files.additional_images.map(
-        (file) => file.path
-      );
-      findUser.additional_images = service_images; // Make sure this matches the schema field
+    // if (req.body && req.body.additional_images) {
+    //   const service_images = req.body.additional_images.map(
+    //     (file) => file.path
+    //   );
+    //   findUser.additional_images = service_images;
+    // } else {
+    //   console.log("No images uploaded or wrong field name.");
+    // }
+
+    if (additional_images && additional_images.length > 0) {
+      findUser.additional_images = additional_images; // Assign the array of S3 URLs
     } else {
-      console.log("No images uploaded or wrong field name.");
+      console.log("No images found to assign to the user.");
     }
 
-    // Save the updated user document
     await findUser.save();
 
-    // Return success response
     res.status(200).json({
       message: "Services added successfully",
       serviceUser: findUser,
@@ -445,11 +428,11 @@ exports.getAllFilteroutVendor = async (req, res) => {
 
 exports.getVendorProfile = async (req, res) => {
   try {
-    console.log("Received Vendor ID:", req.params);
+    // console.log("Received Vendor ID:", req.params);
     const vendor = await vendorSchema
       .findOne({ _id: req.params.id })
       .select("-password");
-    console.log("Vendor data from DB:", vendor);
+    // console.log("Vendor data from DB:", vendor);
     if (!vendor) {
       return res.status(404).json({ message: "Profile not found" });
     }
@@ -703,6 +686,7 @@ exports.vendorApprove = async (req, res) => {
 
 exports.vendorDisapprove = async (req, res) => {
   try {
+    const { reason_for_disapprove } = req.body;
     let vendorId = req.params.id;
     let findVendor = await vendorSchema.findOne({ _id: vendorId });
     if (!findVendor) {
@@ -710,11 +694,88 @@ exports.vendorDisapprove = async (req, res) => {
       return res.status(404).json({ message: "vendor not found" });
     }
     findVendor.is_approved = false;
+    findVendor.isActive = false;
+    findVendor.reason_for_disapprove = reason_for_disapprove;
     await findVendor.save();
     res.status(200).json({
       message: "vendor disapproved successfully",
       approval_status: findVendor.is_approved,
+      reason_for_disapprove: findVendor.reason_for_disapprove,
+      isActive: findVendor.isActive,
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.vendorStatus = async (req, res) => {
+  try {
+    const vendor_id = req.params.id;
+    const findVendor = await vendorSchema.findOne({ _id: vendor_id });
+
+    if (!findVendor) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Service not found" });
+    }
+
+    // Toggle the isActive status
+    findVendor.isActive = !findVendor.isActive;
+
+    // Save the updated status
+    await findVendor.save();
+
+    return res.status(200).json({
+      status: true,
+      message: `Vendor ${findVendor.isActive ? "Activated" : "Inactivated"}`,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.addCommissions = async (req, res) => {
+  try {
+    const { commission_percentage, commission_tax } = req.body;
+    let vendorId = req.params.id;
+    let findVendor = await vendorSchema.findOne({ _id: vendorId });
+    if (!findVendor) {
+      console.log("vendor not found");
+      return res.status(404).json({ message: "vendor not found" });
+    }
+
+    findVendor.commission_percentage =
+      commission_percentage || findVendor.commission_percentage;
+    findVendor.commission_tax = commission_tax || findVendor.commission_tax;
+
+    const newCommission = await vendorSchema.findOneAndUpdate(
+      { _id: vendorId },
+      findVendor,
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Commission added",
+      data: newCommission,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.deleteVendor = async (req, res) => {
+  try {
+    const deletedVendor = await vendorSchema.findOneAndDelete({
+      _id: req.params.id,
+    });
+    if (!deletedVendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+    res
+      .status(200)
+      .json({ message: "Vendor deleted successfully", vendor: deletedVendor });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

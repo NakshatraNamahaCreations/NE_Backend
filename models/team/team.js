@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const teamSchema = new mongoose.Schema({
   member_name: String,
   mobile_number: String,
+  email_id: String,
   password: String,
   dashboard_management: Boolean,
   banner_management: Boolean,
