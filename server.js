@@ -40,6 +40,7 @@ const address = require("./routes/master/address");
 const youtube = require("./routes/article/youtube");
 const companyProfile = require("./routes/master/company_profile");
 const payoutConfig = require("./routes/master/payout_config");
+const technician = require("./routes/master/technician");
 
 const { default: axios } = require("axios");
 // Middleware
@@ -71,6 +72,7 @@ app.use("/api/youtube", youtube);
 app.use("/api/company-profile", companyProfile);
 app.use("/api/payout-config", payoutConfig);
 app.use("/api/user-tnc", userTnC);
+app.use("/api/technician", technician);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

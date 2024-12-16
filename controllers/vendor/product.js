@@ -65,6 +65,7 @@ exports.addProduct = async (req, res) => {
       product_image: req.body.product_image, // Use the value assigned in middleware
       product_video: req.body.product_video, // Use the value assigned in middleware
       mrp_rate,
+      product_price,
       discount,
       brand,
       stock_in_hand,
@@ -388,5 +389,72 @@ exports.deleteProduct = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.addProductsViaExcel = async (req, res) => {
+  const productData = req.body;
+
+  if (!Array.isArray(productData) || productData.length === 0) {
+    return res
+      .status(400)
+      .json({ error: "No data provided or invalid format" });
+  }
+
+  try {
+    // Add approval_status: true to each product
+    const updatedProductData = productData.map((product) => ({
+      ...product,
+      approval_status: false,
+    }));
+
+    const serviceList = await productSchema.insertMany(updatedProductData);
+    if (serviceList.length > 0) {
+      return res.status(200).json({ success: "Products Added", serviceList });
+    } else {
+      return res.status(400).json({ error: "Failed to add services" });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+exports.addProductImage = async (req, res) => {
+  try {
+    const productId = req.params.id;
+
+    // Validate product_image existence
+    if (!req.body.product_image || !Array.isArray(req.body.product_image)) {
+      return res.status(400).json({ message: "Product images are required." });
+    }
+
+    // Find the product by ID
+    const findProduct = await productSchema.findOne({ _id: productId });
+    if (!findProduct) {
+      console.log("Product not found.");
+      return res.status(404).json({ message: "Product not found." });
+    }
+
+    // Add images to the product
+    const updatedProduct = await productSchema.findByIdAndUpdate(
+      productId,
+      { $push: { product_image: { $each: req.body.product_image } } }, // Append the images array
+      { new: true } // Return the updated product
+    );
+
+    if (!updatedProduct) {
+      return res.status(500).json({ message: "Failed to update product." });
+    }
+
+    return res.status(200).json({
+      message: "Product images added successfully.",
+      product: updatedProduct,
+    });
+  } catch (error) {
+    console.error("Error in addProductImage API:", error);
+    return res
+      .status(500)
+      .json({ message: "Internal server error.", details: error.message });
   }
 };

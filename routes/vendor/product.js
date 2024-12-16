@@ -21,6 +21,8 @@ const {
   getRentalProductForAdmin,
   deleteProduct,
   productStatusChange,
+  addProductsViaExcel,
+  addProductImage,
 } = require("../../controllers/vendor/product");
 
 const s3 = new S3Client({
@@ -44,7 +46,7 @@ const uploadToS3 = async (req, res, next) => {
       throw new Error("No files provided");
     }
 
-    console.log("req.files:", req.files);
+    // console.log("req.files:", req.files);
 
     const uploadedFiles = {};
     for (const [key, files] of Object.entries(req.files)) {
@@ -67,7 +69,7 @@ const uploadToS3 = async (req, res, next) => {
         })
       );
     }
-    console.log("Uploaded files:", uploadedFiles);
+    // console.log("Uploaded files:", uploadedFiles);
     req.body.product_image = uploadedFiles.images || [];
     req.body.product_video = uploadedFiles.video
       ? uploadedFiles.video[0]
@@ -75,7 +77,7 @@ const uploadToS3 = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error("Upload error:", error);
+    // console.error("Upload error:", error);
     res
       .status(500)
       .json({ error: "File upload failed", details: error.message });
@@ -112,5 +114,13 @@ router.get("/get-all-sell-product-for-admin", getAllSellForAdminProduct);
 router.put("/product-approved/:id", approveProduct);
 router.put("/product-disapproved/:id", disApproveProduct);
 router.delete("/delete-product/:id", deleteProduct);
+router.post("/add-products-via-excel", addProductsViaExcel);
+
+router.put(
+  "/add-product-image/:id",
+  upload.fields([{ name: "images", maxCount: 6 }]),
+  uploadToS3,
+  addProductImage
+);
 
 module.exports = router;

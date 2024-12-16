@@ -10,18 +10,9 @@ exports.addOrUpdateProfile = async (req, res) => {
       contact_email,
       contact_phone,
     } = req.body;
-    const companyLogo = req.files["company_logo"]
-      ? req.files["company_logo"][0].path
-      : null;
-    const siteFeviicon = req.files["site_favicon"]
-      ? req.files["site_favicon"][0].path
-      : null;
-
-    // console.log({ companyLogo, siteFeviicon });
     let existingProfile = await companyProfileSchema.findOne();
 
     if (existingProfile) {
-      // Update the existing profile
       existingProfile.company_name =
         company_name || existingProfile.company_name;
       existingProfile.contact_phone =
@@ -32,11 +23,13 @@ exports.addOrUpdateProfile = async (req, res) => {
         corporate_address || existingProfile.corporate_address;
       existingProfile.website_url = website_url || existingProfile.website_url;
       existingProfile.footer_text = footer_text || existingProfile.footer_text;
-      existingProfile.company_logo =
-        companyLogo || existingProfile.company_logo;
-      existingProfile.site_favicon =
-        siteFeviicon || existingProfile.site_favicon;
 
+      if (req.body.company_logo) {
+        existingProfile.company_logo = req.body.company_logo;
+      }
+      if (req.body.site_favicon) {
+        existingProfile.site_favicon = req.body.site_favicon;
+      }
       await existingProfile.save();
 
       return res.status(200).json({
@@ -52,8 +45,8 @@ exports.addOrUpdateProfile = async (req, res) => {
       corporate_address,
       contact_email,
       contact_phone,
-      company_logo: companyLogo,
-      site_favicon: siteFeviicon,
+      company_logo: req.body.company_logo,
+      site_favicon: req.body.site_favicon,
     });
 
     await newProfile.save();

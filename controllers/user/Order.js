@@ -55,6 +55,7 @@ exports.userOrder = async (req, res) => {
     const {
       product_data,
       service_data,
+      tech_data,
       receiver_mobilenumber,
       receiver_name,
       venue_name,
@@ -63,7 +64,9 @@ exports.userOrder = async (req, res) => {
       event_end_time,
       event_location,
       gst_applied_value,
-      sub_total,
+      base_amount,
+      tds_deduction,
+      amount_after_deduction,
       cart_total,
       paid_amount,
       payment_method,
@@ -84,6 +87,7 @@ exports.userOrder = async (req, res) => {
 
     const parsedProductData = JSON.parse(product_data);
     const parsedServiceData = JSON.parse(service_data);
+    const parsedTechData = JSON.parse(tech_data);
 
     // const gatepassImage = req.files["upload_gatepass"]
     //   ? req.files["upload_gatepass"][0].path
@@ -95,6 +99,7 @@ exports.userOrder = async (req, res) => {
     const newOrder = new UserOrder({
       product_data: parsedProductData,
       service_data: parsedServiceData,
+      tech_data: parsedTechData,
       receiver_mobilenumber,
       receiver_name,
       venue_name,
@@ -103,7 +108,9 @@ exports.userOrder = async (req, res) => {
       event_end_time,
       event_location,
       gst_applied_value,
-      sub_total,
+      base_amount,
+      tds_deduction,
+      amount_after_deduction,
       cart_total,
       paid_amount,
       payment_method,
