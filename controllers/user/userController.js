@@ -129,6 +129,13 @@ exports.updateProfile = async (req, res) => {
         error: "user not found",
       });
     }
+    if (req.body.pan_front_image) {
+      findUser.pan_front_image = req.body.pan_front_image;
+    }
+    if (req.body.pan_back_image) {
+      findUser.pan_back_image = req.body.pan_back_image;
+    }
+
     findUser.company_profile.push({
       company_type,
       company_name,
@@ -137,6 +144,8 @@ exports.updateProfile = async (req, res) => {
       pan_number,
       trand_license,
       cin_number,
+      pan_front_image: req.body.pan_front_image,
+      pan_back_image: req.body.pan_back_image,
     });
 
     let updatedUser = await UserSchema.findOneAndUpdate(

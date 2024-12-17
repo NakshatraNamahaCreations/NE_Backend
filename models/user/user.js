@@ -35,6 +35,8 @@ const userSchema = new mongoose.Schema({
       company_type: String,
       company_name: String,
       designation: String,
+      pan_front_image: String,
+      pan_back_image: String,
       // name: String,
       // mca_panel_member_name: String,
       gst_number: String,
