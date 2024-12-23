@@ -11,6 +11,7 @@ const {
   returnOrder,
   getCancelledOrder,
   getRescheduledOrder,
+  raiseTickets, //update in server
 } = require("../../controllers/user/Order");
 const path = require("path");
 const multer = require("multer");
@@ -114,5 +115,6 @@ router.get("/get-order-by-order-id/:id", getOrderByOrderId);
 router.put("/cancel-order/:id", cancelOrder);
 router.get("/get-rescheduled-events", getRescheduledOrder);
 router.put("/return-order/:id", returnOrder);
+router.put("/raise-ticket/:id", raiseTickets); //update in server
 
 module.exports = router;

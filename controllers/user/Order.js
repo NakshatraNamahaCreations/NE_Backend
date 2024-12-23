@@ -138,60 +138,6 @@ exports.userOrder = async (req, res) => {
   }
 };
 
-exports.rescheduleOrder = async (req, res) => {
-  try {
-    const eventId = req.params.id;
-
-    const findEvent = await UserOrder.findOne({ _id: eventId });
-    if (!findEvent) {
-      return res.status(404).json({ message: "Event not found" });
-    }
-
-    if (!req.body.location_lat || !req.body.location_long) {
-      return res
-        .status(400)
-        .json({ error: "Latitude and longitude are required." });
-    }
-
-    const updatedData = {
-      receiver_mobilenumber:
-        req.body.receiver_mobilenumber || findEvent.receiver_mobilenumber,
-      receiver_name: req.body.receiver_name || findEvent.receiver_name,
-      venue_name: req.body.venue_name || findEvent.venue_name,
-      venue_open_time: req.body.venue_open_time || findEvent.venue_open_time,
-      event_start_time: req.body.event_start_time || findEvent.event_start_time,
-      event_end_time: req.body.event_end_time || findEvent.event_end_time,
-      event_location: req.body.event_location || findEvent.event_location,
-      order_status: req.body.order_status || findEvent.order_status,
-      event_date: req.body.event_date || findEvent.event_date,
-      event_start_date: req.body.event_start_date || findEvent.event_start_date,
-      event_end_date: req.body.event_end_date || findEvent.event_end_date,
-      number_of_days: req.body.number_of_days || findEvent.number_of_days,
-      event_name: req.body.event_name || findEvent.event_name,
-      ordered_date: req.body.ordered_date || findEvent.ordered_date,
-      location_lat: req.body.location_lat || findEvent.location_lat,
-      location_long: req.body.location_long || findEvent.location_long,
-      rescheduled_date: req.body.rescheduled_date || findEvent.rescheduled_date,
-      reschedule_remark:
-        req.body.reschedule_remark || findEvent.reschedule_remark,
-      upload_invitation: req.body.upload_invitation,
-      upload_gatepass: req.body.upload_gatepass,
-    };
-
-    const updateDetails = await UserOrder.findByIdAndUpdate(
-      eventId,
-      updatedData,
-      { new: true }
-    );
-    res
-      .status(200)
-      .json({ message: "Event Rescheduled", events: updateDetails });
-  } catch (error) {
-    console.error("Error in rescheduleOrder:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
 exports.getAllOrder = async (req, res) => {
   try {
     const allProduct = await UserOrder.find();
@@ -316,6 +262,60 @@ exports.getCancelledOrder = async (req, res) => {
   }
 };
 
+exports.rescheduleOrder = async (req, res) => {
+  try {
+    const eventId = req.params.id;
+
+    const findEvent = await UserOrder.findOne({ _id: eventId });
+    if (!findEvent) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    if (!req.body.location_lat || !req.body.location_long) {
+      return res
+        .status(400)
+        .json({ error: "Latitude and longitude are required." });
+    }
+
+    const updatedData = {
+      receiver_mobilenumber:
+        req.body.receiver_mobilenumber || findEvent.receiver_mobilenumber,
+      receiver_name: req.body.receiver_name || findEvent.receiver_name,
+      venue_name: req.body.venue_name || findEvent.venue_name,
+      venue_open_time: req.body.venue_open_time || findEvent.venue_open_time,
+      event_start_time: req.body.event_start_time || findEvent.event_start_time,
+      event_end_time: req.body.event_end_time || findEvent.event_end_time,
+      event_location: req.body.event_location || findEvent.event_location,
+      order_status: req.body.order_status || findEvent.order_status,
+      event_date: req.body.event_date || findEvent.event_date,
+      event_start_date: req.body.event_start_date || findEvent.event_start_date,
+      event_end_date: req.body.event_end_date || findEvent.event_end_date,
+      number_of_days: req.body.number_of_days || findEvent.number_of_days,
+      event_name: req.body.event_name || findEvent.event_name,
+      ordered_date: req.body.ordered_date || findEvent.ordered_date,
+      location_lat: req.body.location_lat || findEvent.location_lat,
+      location_long: req.body.location_long || findEvent.location_long,
+      rescheduled_date: req.body.rescheduled_date || findEvent.rescheduled_date,
+      reschedule_remark:
+        req.body.reschedule_remark || findEvent.reschedule_remark,
+      upload_invitation: req.body.upload_invitation,
+      upload_gatepass: req.body.upload_gatepass,
+    };
+
+    const updateDetails = await UserOrder.findByIdAndUpdate(
+      eventId,
+      updatedData,
+      { new: true }
+    );
+    res
+      .status(200)
+      .json({ message: "Event Rescheduled", events: updateDetails });
+  } catch (error) {
+    console.error("Error in rescheduleOrder:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 exports.getRescheduledOrder = async (req, res) => {
   try {
     const rescheduledEvents = await UserOrder.find({
@@ -325,6 +325,28 @@ exports.getRescheduledOrder = async (req, res) => {
       return res.status(404).json({ message: "No Rescheduled event's" });
     }
     res.status(200).json({ rescheduledEvents });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// update in server
+exports.raiseTickets = async (req, res) => {
+  try {
+    const order = await UserOrder.findOne({ _id: req.params.id });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    const updateStatus = await UserOrder.updateOne(
+      { _id: req.params.id },
+      {
+        $set: {
+          order_status: "Ticket Raised",
+        },
+      }
+    );
+    res.status(200).json({ status: "Ticket Raised", order: updateStatus });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
