@@ -1,5 +1,5 @@
 const productSchema = require("../../models/vendor/product");
-
+const notificationSchema = require("../../models/notifications/vendor-inapp");
 exports.addProduct = async (req, res) => {
   try {
     // console.log("Product image paths:", req.body.product_image); // Debug log
@@ -35,22 +35,25 @@ exports.addProduct = async (req, res) => {
     } = req.body;
 
     // Ensure Specifications are in the correct format
+    // below validation not required
     let specificationsArray;
     try {
       specificationsArray = JSON.parse(Specifications);
     } catch (e) {
-      return res
-        .status(400)
-        .json({ message: "Add atleast one specifications" });
+      console.log("specifications:", e);
+      // return res
+      //   .status(400)
+      //   .json({ message: "Add atleast one specifications" });
     }
-    if (
-      !Array.isArray(specificationsArray) ||
-      specificationsArray.some((prop) => !prop.name || !prop.value)
-    ) {
-      return res
-        .status(400)
-        .json({ message: "Add atleast one specifications" });
-    }
+    // if (
+    //   !Array.isArray(specificationsArray) ||
+    //   specificationsArray.some((prop) => !prop.name || !prop.value)
+    // ) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: "Add atleast one specifications" });
+    // }
+    // ........................
     // Process images and video
     // const product_image = req.files.images.map((file) => file.path);
     // const product_video = req.files.video ? req.files.video[0].path : null;
@@ -78,7 +81,7 @@ exports.addProduct = async (req, res) => {
       manufacturer_name,
       product_color,
       retuning_date,
-      approval_status: false,
+      approval_status: "Under Review",
       Specifications: specificationsArray, // This will include all the specifications
     });
     await newProduct.save();
@@ -109,13 +112,81 @@ exports.getAllRentalProduct = async (req, res) => {
   try {
     const allRentalProduct = await productSchema.find({
       product_type: "rental",
-      approval_status: true,
+      approval_status: "Approved",
     });
     if (allRentalProduct.length < 0) {
       console.log("no products found");
       return res.status(404).json({ message: "products not found" });
     }
     res.status(200).json(allRentalProduct);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.editProduct = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const fintProduct = await productSchema.findOne({ _id: productId });
+    if (!fintProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    const {
+      product_category,
+      product_name,
+      product_price,
+      mrp_rate,
+      discount,
+      brand,
+      stock_in_hand,
+      model_name,
+      material_type,
+      product_dimension,
+      product_weight,
+      country_of_orgin,
+      warranty,
+      manufacturer_name,
+      product_color,
+    } = req.body;
+
+    fintProduct.product_category =
+      product_category || fintProduct.product_category;
+    fintProduct.product_name = product_name || fintProduct.product_name;
+    fintProduct.product_price = product_price || fintProduct.product_price;
+    fintProduct.mrp_rate = mrp_rate || fintProduct.mrp_rate;
+    fintProduct.discount = discount || fintProduct.discount;
+    fintProduct.brand = brand || fintProduct.brand;
+    fintProduct.stock_in_hand = stock_in_hand || fintProduct.stock_in_hand;
+    fintProduct.model_name = model_name || fintProduct.model_name;
+    fintProduct.material_type = material_type || fintProduct.material_type;
+    fintProduct.product_dimension =
+      product_dimension || fintProduct.product_dimension;
+    fintProduct.product_weight = product_weight || fintProduct.product_weight;
+    fintProduct.country_of_orgin =
+      country_of_orgin || fintProduct.country_of_orgin;
+    fintProduct.warranty = warranty || fintProduct.warranty;
+    fintProduct.manufacturer_name =
+      manufacturer_name || fintProduct.manufacturer_name;
+    fintProduct.product_color = product_color || fintProduct.product_color;
+    fintProduct.product_image =
+      req.body.product_image || fintProduct.product_image;
+    fintProduct.product_video =
+      req.body.product_video || fintProduct.product_video;
+    fintProduct.approval_status = "Under Review";
+
+    let updateProduct = await productSchema.findOneAndUpdate(
+      { _id: productId },
+      fintProduct,
+      {
+        new: true,
+      }
+    );
+    res.status(200).json({
+      message: "Product updated successfully",
+      status: true,
+      data: updateProduct,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -130,7 +201,7 @@ exports.getParticularVendorProduct = async (req, res) => {
     const allRentalProducts = await productSchema.find({
       vendor_id: vendorId,
       product_type: "rental",
-      approval_status: true,
+      approval_status: "Approved",
     });
 
     // Check if no products are found
@@ -165,7 +236,9 @@ exports.getProduct = async (req, res) => {
 exports.filteroutVendorProduct = async (req, res) => {
   try {
     let vendorId = req.params.id;
-    let allSellingProduct = await productSchema.find({ approval_status: true });
+    let allSellingProduct = await productSchema.find({
+      approval_status: "Approved",
+    });
     // const vendorProducts  = await productSchema.find({ vendor_id: vendorId });
     let remainingProducts = allSellingProduct.filter(
       (product) => product.vendor_id.toString() !== vendorId
@@ -214,7 +287,7 @@ exports.getReview = async (req, res) => {
 exports.getAllSellProduct = async (req, res) => {
   try {
     const allSellProduct = await productSchema
-      .find({ product_type: "sell", approval_status: true })
+      .find({ product_type: "sell", approval_status: "Approved" })
       .sort({ _id: -1 });
 
     if (allSellProduct.length < 0) {
@@ -340,8 +413,17 @@ exports.approveProduct = async (req, res) => {
       console.log("Product not found");
       return res.status(404).json({ message: "product not found" });
     }
-    findProduct.approval_status = true;
+    findProduct.approval_status = "Approved";
     await findProduct.save();
+    await notificationSchema.create({
+      vendor_id: findProduct.vendor_id, // Assuming the product has a vendor_id field
+      product_id: productId,
+      notification_type: "product_approval",
+      message: `Your product "${findProduct.product_name}" has been approved.`,
+      status: "unread",
+      metadata: {}, // Add additional metadata if needed
+      created_at: new Date(),
+    });
     res.status(200).json({
       message: "Product approved successfully",
       approval_status: findProduct.approval_status,
@@ -361,10 +443,19 @@ exports.disApproveProduct = async (req, res) => {
       console.log("Product not found");
       return res.status(404).json({ message: "product not found" });
     }
-    findProduct.approval_status = false;
-    findProduct.isActive = false;
+    findProduct.approval_status = "Disapproved";
+    findProduct.isActive = "Disapproved";
     findProduct.reason_for_disapprove = reason_for_disapprove;
     await findProduct.save();
+    await notificationSchema.create({
+      vendor_id: findProduct.vendor_id, // Assuming the product has a vendor_id field
+      product_id: productId,
+      notification_type: "product_approval",
+      message: `Your product "${findProduct.product_name}" has been disapproved.`,
+      status: "unread",
+      metadata: {}, // Add additional metadata if needed
+      created_at: new Date(),
+    });
     res
       .status(200)
       .json({ message: "Product disapproved successfully", findProduct });
@@ -392,6 +483,7 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
+// for admin
 exports.addProductsViaExcel = async (req, res) => {
   const productData = req.body;
 
@@ -405,7 +497,7 @@ exports.addProductsViaExcel = async (req, res) => {
     // Add approval_status: true to each product
     const updatedProductData = productData.map((product) => ({
       ...product,
-      approval_status: false,
+      approval_status: "Under Review",
     }));
 
     const serviceList = await productSchema.insertMany(updatedProductData);
@@ -419,7 +511,7 @@ exports.addProductsViaExcel = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
-
+// for admin
 exports.addProductImage = async (req, res) => {
   try {
     const productId = req.params.id;

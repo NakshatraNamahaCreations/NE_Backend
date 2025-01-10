@@ -1,4 +1,8 @@
 const UserOrder = require("../../models/user/Order");
+const notificationSchema = require("../../models/notifications/vendor-inapp");
+const { default: axios } = require("axios");
+const apiKey = process.env.SENDINBLUE_API_KEY;
+const url = "https://api.brevo.com/v3/smtp/email";
 
 // exports.userOrder = async (req, res) => {
 //   try {
@@ -50,6 +54,65 @@ const UserOrder = require("../../models/user/Order");
 //   }
 // };
 
+const sendUserOrderEmail = async (
+  orderID,
+  orderDate,
+  totalAmount,
+  user_name,
+  email
+) => {
+  const emailData = {
+    sender: {
+      name: "Kadagam Ventures Private Limited",
+      email: "nithyaevents24@gmail.com",
+    },
+    to: [{ email: email, name: user_name }],
+    subject: "Booking Confirmation - Nithyaevent",
+    htmlContent: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          /* Include your CSS styles here */
+        </style>
+      </head>
+      <body>
+        <h4>Dear ${user_name},</h4>
+        <p>Thank you for your booking with Nithyaevent!</p>
+
+         <p>Below are the details of your booking:</p> 
+
+        <p><strong>Order Number:</strong> INV${orderID}</p>
+        <p><strong>Order Date:</strong> ${orderDate}</p>
+        <p><strong>Total Amount:</strong> ${totalAmount}</p> 
+
+        <p>If you have any questions about your order or need assistance, feel free to contact our support team.</p>
+        <p>We look forward to serving you again!</p>
+
+        <p>Best Regards,</p>
+        <p><strong>Support Team</strong><br>Nithyaevent<br><a href="mailto:support@nithyaevent.com">support@nithyaevent.com</a> | 8867999997</p>
+        <p>&copy; 2024 All Rights Reserved, Nithyaevent<br>Designed & Developed by Kadagam Ventures Private Limited</p>
+      </body>
+      </html>
+    `,
+  };
+  try {
+    const response = await axios.post(url, emailData, {
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": apiKey,
+      },
+    });
+    console.log("Email sent successfully:", response.data);
+  } catch (error) {
+    console.error(
+      "Error sending email:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to send onboarding email");
+  }
+};
+
 exports.userOrder = async (req, res) => {
   try {
     const {
@@ -74,6 +137,7 @@ exports.userOrder = async (req, res) => {
       order_status,
       user_id,
       user_name,
+      user_mailid,
       event_date,
       event_start_date,
       event_end_date,
@@ -119,6 +183,7 @@ exports.userOrder = async (req, res) => {
       user_id,
       user_name,
       event_date,
+      user_mailid,
       event_start_date,
       event_end_date,
       number_of_days,
@@ -131,6 +196,34 @@ exports.userOrder = async (req, res) => {
       vendors_message,
     });
     await newOrder.save();
+    // Notify the vendors about the order
+    for (const product of parsedProductData) {
+      const notification = {
+        vendor_id: product.sellerId,
+        notification_type: "product_booking",
+        message: `Your product "${product.productName}" has been booked for the ${event_name} from ${event_date}.`,
+        product_id: product.id,
+        metadata: { user_id, order_status },
+        status: "unread",
+        created_at: new Date(),
+      };
+      await notificationSchema.create(notification);
+    }
+    // mail the user with the order details
+    try {
+      await sendUserOrderEmail(
+        newOrder._id.toString().slice(-6),
+        ordered_date,
+        paid_amount,
+        user_name,
+        user_mailid
+      );
+    } catch (error) {
+      console.error("Order email error:", error.message);
+      return res
+        .status(500)
+        .json({ message: "Order placed, but failed to send email" });
+    }
     res.status(200).json({ message: "Order placed", order: newOrder });
   } catch (error) {
     console.error(error);
@@ -379,6 +472,56 @@ exports.returnOrder = async (req, res) => {
     }
     const updatedOrder = await UserOrder.findOne({ _id: orderId });
     res.status(200).json({ message: "Order returned", order: updatedOrder });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.addDeliveryImges = async (req, res) => {
+  const { vendor_id, vendor_name, image_type } = req.body;
+  const findEvent = await UserOrder.findOne({ _id: req.params.id });
+  if (!findEvent) {
+    return res.status(404).json({ message: "Order not found" });
+  }
+  if (req.body.image_url) {
+    findEvent.image_url = req.body.image_url;
+  }
+  findEvent.event_setup.push({
+    vendor_id,
+    vendor_name,
+    image_type,
+    image_url: req.body.image_url,
+    createdDate: new Date(),
+  });
+  const updatedEvent = await UserOrder.updateOne(
+    { _id: req.params.id },
+    findEvent
+  );
+  res.status(200).json({
+    status: true,
+    success: "Success",
+    data: updatedEvent,
+  });
+};
+
+exports.deliveryOrder = async (req, res) => {
+  try {
+    const { delivered_date } = req.body;
+    const order = await UserOrder.findOne({ _id: req.params.id });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    const updateStatus = await UserOrder.updateOne(
+      { _id: req.params.id },
+      {
+        $set: {
+          order_status: "Order Delivered",
+          delivered_date: delivered_date || new Date(),
+        },
+      }
+    );
+    res.status(200).json({ status: "Order Delivered", order: updateStatus });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

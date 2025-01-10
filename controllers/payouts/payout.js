@@ -1,4 +1,5 @@
 const payoutSchema = require("../../models/payouts/payout");
+const notificationSchema = require("../../models/notifications/vendor-inapp");
 
 exports.addPayout = async (req, res) => {
   try {
@@ -43,6 +44,14 @@ exports.addPayout = async (req, res) => {
       failure_remark,
     });
     await newPayout.save();
+    await notificationSchema.create({
+      vendor_id: seller_id,
+      notification_type: "vendor_payment",
+      message: `Your payment of "Rs.${payout_amount}/-" for event ${event_name} is being Initiated.`,
+      status: "unread",
+      metadata: { event_id }, // Add additional metadata if needed
+      created_at: new Date(),
+    });
     res.status(200).json({
       message: "Initialized",
       data: newPayout,
@@ -67,6 +76,9 @@ exports.confirmPayoutProcessed = async (req, res) => {
       processed_date,
       transaction_Id,
       failure_remark,
+      payout_amount,
+      event_name,
+      seller_id,
     } = req.body;
 
     findPayout.payout_status = "Processed";
@@ -81,6 +93,15 @@ exports.confirmPayoutProcessed = async (req, res) => {
     res.status(200).json({
       message: "Payout processed successfully",
       data: findPayout,
+    });
+
+    await notificationSchema.create({
+      vendor_id: seller_id,
+      notification_type: "vendor_payment",
+      message: `Your payment of "Rs.${payout_amount}/-" for event ${event_name} is being processed.`,
+      status: "unread",
+      metadata: { event_name }, // Add additional metadata if needed
+      created_at: new Date(),
     });
   } catch (error) {
     console.error(error);

@@ -1,4 +1,62 @@
+const { default: axios } = require("axios");
 const teamSchema = require("../../models/team/team");
+const apiKey = process.env.SENDINBLUE_API_KEY;
+const url = "https://api.brevo.com/v3/smtp/email";
+
+const sendTeamCredentialEmail = async (
+  email_id,
+  member_name,
+  mobile_number,
+  password
+) => {
+  const emailData = {
+    sender: {
+      name: "Kadagam Ventures Private Limited",
+      email: "nithyaevents24@gmail.com",
+    },
+    to: [{ email: email_id, name: member_name }],
+    subject: "Welcome to Nithyaevent Admin Panel - Your Login Credentials!",
+    htmlContent: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+      </head>
+      <body>
+        <h4>Dear ${member_name},</h4>
+        <p>Your profile has been created by the Nithyaevent Admin to access the Nithyaevent Admin Panel.</p>
+        <p>Please find your login credentials below</p> 
+        <p><strong>Username:</strong> ${member_name}</p>
+        <p><strong>Mobile Number:</strong> ${mobile_number}</p>
+        <p><strong>Email ID:</strong> ${email_id}</p>
+        <p><strong>Password:</strong> ${password}</p>
+         
+        <p><strong>Admin Panel Link:</strong> <a href="https://admin.nithyaevent.com">Click here to access the Admin Panel</a></p>
+        
+        <p>If you have any questions or require assistance, feel free to contact our support team.</p>
+
+        <p>Best Regards,</p>
+        <p><strong>Support Team</strong><br>Nithyaevent<br><a href="mailto:support@nithyaevent.com">support@nithyaevent.com</a> | 8867999997</p>
+        <p>&copy; 2024 All Rights Reserved, Nithyaevent<br>Designed & Developed by Kadagam Ventures Private Limited</p>
+      </body>
+      </html>
+    `,
+  };
+  try {
+    const response = await axios.post(url, emailData, {
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": apiKey,
+      },
+    });
+    console.log("Email sent successfully:", response.data);
+  } catch (error) {
+    console.error(
+      "Error sending email:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to send onboarding email");
+  }
+};
 
 exports.createTeam = async (req, res) => {
   try {
@@ -7,8 +65,12 @@ exports.createTeam = async (req, res) => {
       mobile_number,
       email_id,
       password,
-      dashboard_management,
+      // dashboard_management,
       banner_management,
+      profile,
+      billing_address,
+      state,
+      city,
       service_management,
       subservice_management,
       requirement_management,
@@ -19,6 +81,18 @@ exports.createTeam = async (req, res) => {
       manage_teammemebrs,
       manage_sellproducts,
       manage_rentalproducts,
+      event_report,
+      calculate,
+      cancel_event,
+      reschedule_event,
+      ticket_raised,
+      pyout_config,
+      product_payout,
+      service_payout,
+      tech_payout,
+      faq,
+      tnc,
+      youtube_video,
     } = req.body;
 
     const existingMobileNumber = await teamSchema.findOne({ mobile_number });
@@ -26,13 +100,22 @@ exports.createTeam = async (req, res) => {
       return res.status(400).json({ message: "Mobile Number already exists" });
     }
 
+    const existingEmailId = await teamSchema.findOne({ email_id });
+    if (existingEmailId) {
+      return res.status(400).json({ message: "Email ID already exists" });
+    }
+
     const newUser = new teamSchema({
       member_name,
       mobile_number,
       password,
       email_id,
-      dashboard_management,
+      // dashboard_management,
       banner_management,
+      profile,
+      billing_address,
+      state,
+      city,
       service_management,
       subservice_management,
       requirement_management,
@@ -43,9 +126,34 @@ exports.createTeam = async (req, res) => {
       manage_teammemebrs,
       manage_sellproducts,
       manage_rentalproducts,
+      event_report,
+      calculate,
+      cancel_event,
+      reschedule_event,
+      ticket_raised,
+      pyout_config,
+      product_payout,
+      service_payout,
+      tech_payout,
+      faq,
+      tnc,
+      youtube_video,
     });
     await newUser.save();
-    res.status(200).json({ message: "User registered successfully", newUser });
+    try {
+      await sendTeamCredentialEmail(
+        email_id,
+        member_name,
+        mobile_number,
+        password
+      );
+    } catch (error) {
+      console.log("credential error:", error);
+      return res
+        .status(500)
+        .json({ message: "Failed to send the credential email" });
+    }
+    res.status(200).json({ message: "User Created successfully", newUser });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

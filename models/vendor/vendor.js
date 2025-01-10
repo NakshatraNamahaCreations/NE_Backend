@@ -54,6 +54,12 @@ const vendorSchema = new mongoose.Schema({
   profession: {
     type: String,
   },
+  bank_name: String,
+  account_holder_name: String,
+  account_number: String,
+  ifsc_code: String,
+  bank_branch_name: String,
+
   profession_category: String,
   shop_name: String,
   godown_name: String,

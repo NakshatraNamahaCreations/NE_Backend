@@ -12,6 +12,11 @@ exports.vendorRegister = async (req, res) => {
       password,
       profession,
       profession_category,
+      bank_name,
+      account_holder_name,
+      account_number,
+      ifsc_code,
+      bank_branch_name,
     } = req.body;
 
     const existingMobileNumber = await vendorSchema.findOne({ mobile_number });
@@ -35,6 +40,11 @@ exports.vendorRegister = async (req, res) => {
       mobile_number,
       profession,
       profession_category,
+      bank_name,
+      account_holder_name,
+      account_number,
+      ifsc_code,
+      bank_branch_name,
       is_approved: false,
     });
 

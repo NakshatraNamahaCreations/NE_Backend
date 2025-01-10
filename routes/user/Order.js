@@ -11,6 +11,8 @@ const {
   returnOrder,
   getCancelledOrder,
   getRescheduledOrder,
+  addDeliveryImges,
+  deliveryOrder,
   raiseTickets, //update in server
 } = require("../../controllers/user/Order");
 const path = require("path");
@@ -89,6 +91,49 @@ const uploadToS3 = async (req, res, next) => {
   }
 };
 
+const uploadDeliveryiMAGES = async (req, res, next) => {
+  try {
+    if (!req.files) {
+      throw new Error("No files provided");
+    }
+    // console.log("req.files:", req.files);
+    const uploadedFiles = {};
+    for (const [key, files] of Object.entries(req.files)) {
+      uploadedFiles[key] = await Promise.all(
+        files.map(async (file) => {
+          const uploadParams = {
+            Bucket: process.env.AWS_S3_BUCKET_NAME,
+            Key: `delivery_setup/${Date.now()}-${file.originalname}`,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+          };
+
+          const uploader = new Upload({
+            client: s3,
+            params: uploadParams,
+          });
+
+          const uploadResult = await uploader.done();
+          return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+        })
+      );
+    }
+    // console.log("Uploaded files:", uploadedFiles);
+
+    // Assign the uploaded URLs to req.body fields
+    req.body.image_url = uploadedFiles.image_url
+      ? uploadedFiles.image_url[0] // Only one file expected
+      : null;
+
+    next();
+  } catch (error) {
+    console.error("Upload error:", error);
+    res
+      .status(500)
+      .json({ error: "File upload failed", details: error.message });
+  }
+};
+
 router.post(
   "/create-order",
   upload.fields([
@@ -116,5 +161,11 @@ router.put("/cancel-order/:id", cancelOrder);
 router.get("/get-rescheduled-events", getRescheduledOrder);
 router.put("/return-order/:id", returnOrder);
 router.put("/raise-ticket/:id", raiseTickets); //update in server
-
+router.put(
+  "/add-deliverey-setup/:id",
+  upload.fields([{ name: "image_url", maxCount: 1 }]),
+  uploadDeliveryiMAGES,
+  addDeliveryImges
+);
+router.put("/delivery-order/:id", deliveryOrder);
 module.exports = router;

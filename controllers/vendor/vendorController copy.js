@@ -428,11 +428,11 @@ exports.getAllFilteroutVendor = async (req, res) => {
 
 exports.getVendorProfile = async (req, res) => {
   try {
-    console.log("Received Vendor ID:", req.params);
+    // console.log("Received Vendor ID:", req.params);
     const vendor = await vendorSchema
       .findOne({ _id: req.params.id })
       .select("-password");
-    console.log("Vendor data from DB:", vendor);
+    // console.log("Vendor data from DB:", vendor);
     if (!vendor) {
       return res.status(404).json({ message: "Profile not found" });
     }

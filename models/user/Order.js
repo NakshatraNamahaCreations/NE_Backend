@@ -26,6 +26,7 @@ const userOrderSchema = new mongoose.Schema(
     // product_name: String,
     user_id: String,
     user_name: String,
+    user_mailid: String,
     venue_name: String,
     venue_open_time: String,
     location_lat: {
@@ -58,6 +59,15 @@ const userOrderSchema = new mongoose.Schema(
     cancelled_date: String,
     stock_in_hand: Number,
     vendors_message: String,
+    event_setup: [
+      {
+        vendor_id: String,
+        vendor_name: String,
+        image_type: String,
+        image_url: String,
+        createdDate: String,
+      },
+    ],
     ordered_date: { type: Date },
     returned_date: { type: Date },
     delivered_date: { type: Date },
