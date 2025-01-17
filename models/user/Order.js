@@ -27,6 +27,7 @@ const userOrderSchema = new mongoose.Schema(
     user_id: String,
     user_name: String,
     user_mailid: String,
+    user_mobile_number: String,
     venue_name: String,
     venue_open_time: String,
     location_lat: {

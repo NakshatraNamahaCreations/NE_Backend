@@ -125,6 +125,38 @@ exports.getAllRentalProduct = async (req, res) => {
   }
 };
 
+exports.getFeaturedProducts = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+
+    if (limit <= 0) {
+      return res.status(400).json({ message: "Invalid limit parameter" });
+    }
+
+    const featuredProducts = await productSchema
+      .find({
+        product_type: "rental",
+        approval_status: "Approved",
+        isFeatured: true,
+      })
+      .limit(limit);
+
+    if (featuredProducts.length === 0) {
+      return res.status(404).json({ message: "No featured products found" });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Featured products fetched successfully",
+      data: featuredProducts,
+      length: featuredProducts.length,
+    });
+  } catch (error) {
+    console.error("Error fetching featured products:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.editProduct = async (req, res) => {
   try {
     const productId = req.params.id;
@@ -550,3 +582,47 @@ exports.addProductImage = async (req, res) => {
       .json({ message: "Internal server error.", details: error.message });
   }
 };
+
+// [
+// {orderId: "97738140289314444839",id: "67598de073ce3758dc50907e",productName: "RCF HDL20 Tops",productPrice: 2500,mrpPrice: 2500,store: "Ramdev Electricals Rent",imageUrl:"https://my-s3-image-storage.s3.us-east-1.amazonaws.com/product_files/1733997693945-RCF HDL20 Tops.png",productDimension: "32.6D x 68.8W x 36.8H Centimeters",totalPrice: 5000,quantity: 2,context: "product",sellerName: "Kanna Devan",sellerId: "67062e43e0297d4e91ab505a",eventStartDate: "2024-01-20",eventEndDate: "2024-01-20",commissionTax: 18,commissionPercentage: 20},
+//   {
+//     orderId: "73104260950546984060",
+//     id: "67598de073ce3758dc5090a3",
+//     productName: "Silent Communication Units",
+//     productPrice: 1500,
+//     mrpPrice: 1500,
+//     store: "Pavan Rentals Supply",
+//     imageUrl:
+//       "https://my-s3-image-storage.s3.us-east-1.amazonaws.com/product_files/1733924762560-silent-conference-wireless-audio-communication-system-500x500.jpg.webp",
+//     productDimension: "27.5 x 25.8 x 51.5 Centimeters",
+//     totalPrice: 4500,
+//     quantity: 3,
+//     context: "product",
+//     sellerName: "Pavan Kumar",
+//     sellerId: "67062f54e0297d4e91ab5083",
+//     eventStartDate: "2024-01-20",
+//     eventEndDate: "2024-01-20",
+//     commissionTax: 18,
+//     commissionPercentage: 20,
+//   },
+// ];
+
+// [
+//   {orderId: "42522766168849129449",service_id: "67614adb8f4328508f0c818b",category: "Sound",price: 2000,service_name: "Sound Engineer",shop_name: "SRI KOTTURESHWARA ELECTRICALS",vendor_id: "67062d0fe0297d4e91ab5048",vendor_name: "Mallappa Potanakatti",eventStartDate: "2024-01-20",eventEndDate: "2024-01-20",quantity: 3,totalPrice: 6000,commissionPercentage: 20,commissionTax: 18},
+//   {
+//     orderId: "67536612198781889303",
+//     service_id: "675be756df27f6d4a8e33f2c",
+//     category: "Lighting",
+//     price: 6800,
+//     service_name: "Technician",
+//     shop_name: "Mani Electricals",
+//     vendor_id: "670622e9668b7b32798e6c96",
+//     vendor_name: "Mani thiruvengadam",
+//     eventStartDate: "2024-01-20",
+//     eventEndDate: "2024-01-20",
+//     quantity: 3,
+//     totalPrice: 20400,
+//     commissionPercentage: 20,
+//     commissionTax: 18,
+//   },
+// ];

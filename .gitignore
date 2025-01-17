@@ -40,6 +40,10 @@ build/Release
 
 # Dependency directories
 node_modules/
+invoice.html
+note.txt
+ticket.html
+user.html
 jspm_packages/
 
 # Snowpack dependency directory (https://snowpack.dev/)

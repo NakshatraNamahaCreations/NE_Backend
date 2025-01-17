@@ -2,8 +2,21 @@ const { default: axios } = require("axios");
 const UserSchema = require("../../models/user/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { sendSMS } = require("../../utils/sendSMS");
+const otpSchema = require("../../models/otp/otp");
+const crypto = require("crypto");
+
+// BREVO SEND EMAIL
 const apiKey = process.env.SENDINBLUE_API_KEY;
 const url = "https://api.brevo.com/v3/smtp/email";
+
+// AIRTEL SEND SMS
+// const CUSTOMER_ID = process.env.CUSTOMER_ID;
+// const SOURCE_ADDRESS = process.env.SOURCE_ADDRESS;
+// const MESSAGE_TYPE = process.env.MESSAGE_TYPE;
+// const ENTITY_ID = process.env.ENTITY_ID;
+// const AIRTLE_URL = "https://iqsms.airtel.in/api/v1/send-sms";
+// const AUTH_HEADDER = process.env.BASE64_AUTH;
 
 const sendOnboardingEmail = async (email, username, mobilenumber, password) => {
   const emailData = {
@@ -54,10 +67,50 @@ const sendOnboardingEmail = async (email, username, mobilenumber, password) => {
   }
 };
 
+// const sendWelcomeSMS = async (mobilenumber) => {
+//   try {
+//     // Define the payload
+//     let data = JSON.stringify({
+//       customerId: CUSTOMER_ID,
+//       destinationAddress: mobilenumber,
+//       message:
+//         "Welcome to NithyaEvent! We're thrilled to have you as a customer. We strive to provide the best service and products, and we're here to assist you with anything you need. Thank you Nithyaeventsupport@nithyaevents.com",
+//       sourceAddress: SOURCE_ADDRESS,
+//       messageType: MESSAGE_TYPE,
+//       dltTemplateId: "1007115106480901552",
+//       entityId: ENTITY_ID,
+//     });
+
+//     // Define the config
+//     let config = {
+//       method: "post",
+//       url: AIRTLE_URL,
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: AUTH_HEADDER,
+//       },
+//       data: data, // Attach the data
+//     };
+
+//     // Make the API call
+//     const response = await axios(config);
+//     console.log("SMS Sent Successfully:", response.data);
+//   } catch (error) {
+//     console.error(
+//       "Error sending SMS:",
+//       error.response ? error.response.data : error.message
+//     );
+//   }
+// };
+
 // Controller for registering a new user
+
 exports.register = async (req, res) => {
   try {
     const { username, email, mobilenumber, password } = req.body;
+    const SMS_TYPE = "welcome_template";
+    const welcomeMessage =
+      "Welcome to NithyaEvent! We're thrilled to have you as a customer. We strive to provide the best service and products, and we're here to assist you with anything you need. Thank you Nithyaeventsupport@nithyaevents.com";
 
     // Check if the user already exists
     const existingUser = await UserSchema.findOne({ email });
@@ -84,6 +137,7 @@ exports.register = async (req, res) => {
     // Send onboarding email
     try {
       await sendOnboardingEmail(email, username, mobilenumber, password);
+      await sendSMS(mobilenumber, welcomeMessage, SMS_TYPE);
     } catch (error) {
       console.error("Onboarding email error:", error.message);
       return res
@@ -134,6 +188,100 @@ exports.login = async (req, res) => {
       user: user,
       // accessToken: accessToken, // Include token if required
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.loginWithMobileNumber = async (req, res) => {
+  const { mobilenumber } = req.body;
+  const SMS_TYPE = "otp_template";
+  try {
+    if (!mobilenumber) {
+      return res.status(400).json({ error: "Mobilenumber is required" });
+    }
+
+    const user = await UserSchema.findOne({ mobilenumber });
+    if (!user) {
+      console.log("mobilenumber not match");
+      return res.status(400).json({ message: "Mobile Number doesn't exists" });
+    }
+    // const isMatch = await bcrypt.compare(password, user.password);
+    // if (!isMatch) {
+    //   console.log("Password not match");
+    //   return res.status(400).json({ message: "Password doesn't exists" });
+    // }
+
+    const otp = crypto.randomInt(100000, 999999);
+    const expiry = new Date(Date.now() + 60 * 1000);
+
+    await otpSchema.create({ mobilenumber, otp, expiry });
+    // const otpMessage = `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
+    const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
+
+    const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
+
+    if (!smsResponse.success) {
+      return res.status(500).json({ message: "Failed to send OTP" });
+    }
+
+    res.status(200).json({
+      message: "Login successful. OTP sent to your mobile number.",
+      user,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.resendOTP = async (req, res) => {
+  const { mobilenumber } = req.body;
+  const SMS_TYPE = "otp_template";
+  try {
+    const user = await UserSchema.findOne({ mobilenumber });
+    if (!user) {
+      console.log("mobilenumber not match");
+      return res.status(400).json({ message: "mobilenumber not match" });
+    }
+
+    const otp = crypto.randomInt(100000, 999999);
+    const expiry = new Date(Date.now() + 60 * 1000);
+
+    await otpSchema.create({ mobilenumber, otp, expiry });
+    // const otpMessage = `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
+    const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
+
+    const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
+
+    if (!smsResponse.success) {
+      return res.status(500).json({ message: "Failed to send OTP" });
+    }
+
+    res.status(200).json({
+      message: "OTP Resent",
+      user,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.verifyOTP = async (req, res) => {
+  const { mobilenumber, otp } = req.body;
+  try {
+    const record = await otpSchema.findOne({ mobilenumber, otp });
+    if (!record) {
+      console.log("Invalid OTP");
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+    if (record.expiry < new Date()) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
+    await otpSchema.deleteMany({ mobilenumber });
+    res.status(200).json({ message: "OTP verified successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

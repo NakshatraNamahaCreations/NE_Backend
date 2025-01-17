@@ -1,4 +1,5 @@
 const UserOrder = require("../../models/user/Order");
+
 const notificationSchema = require("../../models/notifications/vendor-inapp");
 const { default: axios } = require("axios");
 const apiKey = process.env.SENDINBLUE_API_KEY;
@@ -138,6 +139,7 @@ exports.userOrder = async (req, res) => {
       user_id,
       user_name,
       user_mailid,
+      user_mobile_number,
       event_date,
       event_start_date,
       event_end_date,
@@ -148,6 +150,8 @@ exports.userOrder = async (req, res) => {
       location_long,
       vendors_message,
     } = req.body;
+
+    const SMS_TYPE = "delivery_template";
 
     const parsedProductData = JSON.parse(product_data);
     const parsedServiceData = JSON.parse(service_data);
@@ -184,6 +188,7 @@ exports.userOrder = async (req, res) => {
       user_name,
       event_date,
       user_mailid,
+      user_mobile_number,
       event_start_date,
       event_end_date,
       number_of_days,
@@ -210,6 +215,7 @@ exports.userOrder = async (req, res) => {
       await notificationSchema.create(notification);
     }
     // mail the user with the order details
+    const deliveryMessage = `Hello Naveen,Your one-time`;
     try {
       await sendUserOrderEmail(
         newOrder._id.toString().slice(-6),
@@ -218,6 +224,7 @@ exports.userOrder = async (req, res) => {
         user_name,
         user_mailid
       );
+      await sendSMS(user_mobile_number, deliveryMessage, SMS_TYPE);
     } catch (error) {
       console.error("Order email error:", error.message);
       return res

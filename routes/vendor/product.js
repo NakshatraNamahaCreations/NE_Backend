@@ -8,6 +8,7 @@ const {
   addProduct,
   getAllProduct,
   getAllRentalProduct,
+  getFeaturedProducts,
   getAllSellProduct,
   getProduct,
   writeReview,
@@ -101,6 +102,7 @@ router.post(
 );
 router.get("/getallproduct", getAllProduct);
 router.get("/getrentalproduct", getAllRentalProduct);
+router.get("/getfeaturedproducts", getFeaturedProducts);
 router.get("/getproduct/:id", getProduct);
 router.get("/getfilteroutproducts/:id", filteroutVendorProduct);
 router.get("/get-particular-vendor-products/:id", getParticularVendorProduct);

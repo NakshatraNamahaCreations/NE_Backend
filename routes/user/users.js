@@ -4,6 +4,9 @@ const router = express.Router();
 const {
   register,
   login,
+  loginWithMobileNumber,
+  resendOTP,
+  verifyOTP,
   getProfile,
   getAllUser,
   updateProfile,
@@ -76,6 +79,9 @@ const uploadToS3 = async (req, res, next) => {
 router.post("/refresh-token", refreshToken);
 router.post("/user-register", register);
 router.post("/user-login", login);
+router.post("/re-sent-otp", resendOTP);
+router.post("/verify-otp", verifyOTP);
+router.post("/login-with-mobile-number", loginWithMobileNumber);
 router.get("/get-all-user", getAllUser);
 router.get("/get-user-profile/:id", getProfile);
 router.put(

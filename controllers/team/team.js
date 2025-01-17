@@ -198,6 +198,7 @@ exports.teamUserLogin = async (req, res) => {
     res.status(200).json({
       message: "Login Success",
       user: user,
+      status: "Online",
     });
   } catch (error) {
     console.error(error);
@@ -257,10 +258,14 @@ exports.updateUser = async (req, res) => {
     const {
       member_name,
       mobile_number,
-      email_id,
       password,
-      dashboard_management,
+      email_id,
+      // dashboard_management,
       banner_management,
+      profile,
+      billing_address,
+      state,
+      city,
       service_management,
       subservice_management,
       requirement_management,
@@ -271,6 +276,18 @@ exports.updateUser = async (req, res) => {
       manage_teammemebrs,
       manage_sellproducts,
       manage_rentalproducts,
+      event_report,
+      calculate,
+      cancel_event,
+      reschedule_event,
+      ticket_raised,
+      pyout_config,
+      product_payout,
+      service_payout,
+      tech_payout,
+      faq,
+      tnc,
+      youtube_video,
     } = req.body;
     const memberId = req.params.id;
     const user = await teamSchema.findOne({ _id: memberId });
@@ -281,8 +298,7 @@ exports.updateUser = async (req, res) => {
     user.mobile_number = mobile_number || user.mobile_number;
     user.password = password || user.password;
     user.email_id = email_id || user.email_id;
-    user.dashboard_management =
-      dashboard_management || user.dashboard_management;
+    user.profile = profile || user.profile;
     user.banner_management = banner_management || user.banner_management;
     user.service_management = service_management || user.service_management;
     user.subservice_management =
@@ -299,6 +315,22 @@ exports.updateUser = async (req, res) => {
     user.manage_sellproducts = manage_sellproducts || user.manage_sellproducts;
     user.manage_rentalproducts =
       manage_rentalproducts || user.manage_rentalproducts;
+    user.billing_address = billing_address || user.billing_address;
+    user.state = state || user.state;
+    user.city = city || user.city;
+    user.event_report = event_report || user.event_report;
+    user.calculate = calculate || user.calculate;
+    user.cancel_event = cancel_event || user.cancel_event;
+    user.reschedule_event = reschedule_event || user.reschedule_event;
+    user.ticket_raised = ticket_raised || user.ticket_raised;
+    user.pyout_config = pyout_config || user.pyout_config;
+    user.product_payout = product_payout || user.product_payout;
+    user.service_payout = service_payout || user.service_payout;
+    user.tech_payout = tech_payout || user.tech_payout;
+    user.faq = faq || user.faq;
+    user.tnc = tnc || user.tnc;
+    user.youtube_video = youtube_video || user.youtube_video;
+
     let updateUser = await teamSchema.findOneAndUpdate(
       { _id: memberId },
       user,
@@ -327,6 +359,21 @@ exports.deleteTeamUser = async (req, res) => {
     return res
       .status(200)
       .send({ status: true, success: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+// write a api for logout?
+exports.logout = async (req, res) => {
+  try {
+    const _id = req.params.id;
+    const teamUser = await teamSchema.findById(_id);
+    if (!teamUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res
+      .status(200)
+      .send({ status: "Offline", success: "Logout success" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
