@@ -2,7 +2,6 @@ const UserOrder = require("../../models/user/Order");
 
 const notificationSchema = require("../../models/notifications/vendor-inapp");
 const { default: axios } = require("axios");
-const { sendSMS } = require("../../utils/sendSMS");
 const apiKey = process.env.SENDINBLUE_API_KEY;
 const url = "https://api.brevo.com/v3/smtp/email";
 
@@ -150,14 +149,13 @@ exports.userOrder = async (req, res) => {
       location_lat,
       location_long,
       vendors_message,
-      booking_from,
     } = req.body;
 
     const SMS_TYPE = "delivery_template";
 
-    const parsedProductData = product_data ? JSON.parse(product_data) : [];
-    const parsedServiceData = service_data ? JSON.parse(service_data) : [];
-    const parsedTechData = tech_data ? JSON.parse(tech_data) : [];
+    const parsedProductData = JSON.parse(product_data);
+    const parsedServiceData = JSON.parse(service_data);
+    const parsedTechData = JSON.parse(tech_data);
 
     // const gatepassImage = req.files["upload_gatepass"]
     //   ? req.files["upload_gatepass"][0].path
@@ -201,7 +199,6 @@ exports.userOrder = async (req, res) => {
       location_lat,
       location_long,
       vendors_message,
-      booking_from,
     });
     await newOrder.save();
     // Notify the vendors about the order
@@ -218,7 +215,7 @@ exports.userOrder = async (req, res) => {
       await notificationSchema.create(notification);
     }
     // mail the user with the order details
-    const deliveryMessage = `Dear ${user_name},Thank you for your purchase! We're excited to confirm that we've received your order #var. Your order is being processed and we’ll notify you once it’s on its way.Order Details:Order Number: varItems Ordered:var – var – varvar –var – varvarBilling Information:Billing Name: varBilling Address: varShipping Information:Shipping Address: varShipping Method: varEstimated Delivery Date: varIf you have any questions or need to make changes, feel free to reach out to our customer support at Support@nithyaevents.com. We’re here to help!Thank you for choosing NithyaEvent. We hope you have the best experience!Best regards,NithyaEventSupport@nithyaevents.com www.nithyaevent.com`;
+    const deliveryMessage = `Hello Naveen,Your one-time`;
     try {
       await sendUserOrderEmail(
         newOrder._id.toString().slice(-6),
@@ -227,7 +224,7 @@ exports.userOrder = async (req, res) => {
         user_name,
         user_mailid
       );
-      // await sendSMS(user_mobile_number, deliveryMessage, SMS_TYPE);
+      await sendSMS(user_mobile_number, deliveryMessage, SMS_TYPE);
     } catch (error) {
       console.error("Order email error:", error.message);
       return res

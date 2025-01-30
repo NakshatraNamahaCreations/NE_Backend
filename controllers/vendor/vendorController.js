@@ -45,8 +45,6 @@ exports.vendorRegister = async (req, res) => {
       account_number,
       ifsc_code,
       bank_branch_name,
-      commission_percentage: 22,
-      commission_tax: 18,
       is_approved: false,
     });
 

@@ -108,77 +108,31 @@ exports.getAllProduct = async (req, res) => {
   }
 };
 
-// exports.getAllRentalProduct = async (req, res) => {
-//   try {
-//     const allRentalProduct = await productSchema.find({
-//       product_type: "rental",
-//       approval_status: "Approved",
-//     });
-//     if (allRentalProduct.length < 0) {
-//       console.log("no products found");
-//       return res.status(404).json({ message: "products not found" });
-//     }
-//     res.status(200).json(allRentalProduct);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
 exports.getAllRentalProduct = async (req, res) => {
   try {
-    // Get the limit from the query parameter (if provided)
-    const limit = req.query.limit ? parseInt(req.query.limit) : null;
-
-    // Validate the limit (ensure it's a positive number if provided)
-    if (limit !== null && limit <= 0) {
-      return res.status(400).json({ message: "Invalid limit parameter" });
-    }
-
-    // Fetch featured rental products
-    let query = productSchema
-      .find({
-        product_type: "rental",
-        approval_status: "Approved",
-      })
-      .sort({ _id: -1 });
-
-    // Apply limit if it's provided
-    if (limit !== null) {
-      query = query.limit(limit);
-    }
-
-    const allRentalProduct = await query;
-
-    // Check if there are any featured products
-    if (allRentalProduct.length === 0) {
-      return res.status(404).json({ message: "No Rental products found" });
-    }
-
-    // Return the featured products
-    return res.status(200).json({
-      status: true,
-      message: "Rental products fetched successfully",
-      data: allRentalProduct,
-      length: allRentalProduct.length,
+    const allRentalProduct = await productSchema.find({
+      product_type: "rental",
+      approval_status: "Approved",
     });
+    if (allRentalProduct.length < 0) {
+      console.log("no products found");
+      return res.status(404).json({ message: "products not found" });
+    }
+    res.status(200).json(allRentalProduct);
   } catch (error) {
-    console.error("Error fetching rental products:", error);
-    return res.status(500).json({ message: "Server error" });
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 exports.getFeaturedProducts = async (req, res) => {
   try {
-    // Get the limit from the query parameter (default to 10 if not provided)
     const limit = parseInt(req.query.limit) || 10;
 
-    // Validate the limit (ensure it's a positive number)
     if (limit <= 0) {
       return res.status(400).json({ message: "Invalid limit parameter" });
     }
 
-    // Fetch featured rental products with the specified limit
     const featuredProducts = await productSchema
       .find({
         product_type: "rental",
@@ -187,12 +141,10 @@ exports.getFeaturedProducts = async (req, res) => {
       })
       .limit(limit);
 
-    // Check if there are any featured products
     if (featuredProducts.length === 0) {
       return res.status(404).json({ message: "No featured products found" });
     }
 
-    // Return the featured products
     return res.status(200).json({
       status: true,
       message: "Featured products fetched successfully",

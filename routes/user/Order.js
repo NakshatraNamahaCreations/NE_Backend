@@ -47,14 +47,8 @@ const upload = multer({
 
 const uploadToS3 = async (req, res, next) => {
   try {
-    // if (!req.files) {
-    //   throw new Error("No files provided"); //old one
-    // }
-    if (!req.files || Object.keys(req.files).length === 0) {
-      // No files provided; continue to the next middleware
-      req.body.upload_gatepass = null;
-      req.body.upload_invitation = null;
-      return next();
+    if (!req.files) {
+      throw new Error("No files provided");
     }
     // console.log("req.files:", req.files);
     const uploadedFiles = {};
