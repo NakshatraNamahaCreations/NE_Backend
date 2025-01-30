@@ -174,6 +174,7 @@ exports.deleteRequirementField = async (req, res) => {
     // Find the service by ID
     const service = await serviceSchema.findOne({ _id: serviceId });
     if (!service) {
+      console.log("service not found");
       return res.status(404).json({ message: "Service not found" });
     }
 

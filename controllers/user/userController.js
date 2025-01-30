@@ -5,10 +5,10 @@ const jwt = require("jsonwebtoken");
 const { sendSMS } = require("../../utils/sendSMS");
 const otpSchema = require("../../models/otp/otp");
 const crypto = require("crypto");
-
-// BREVO SEND EMAIL
-const apiKey = process.env.SENDINBLUE_API_KEY;
-const url = "https://api.brevo.com/v3/smtp/email";
+const {
+  sendOnboardingEmail,
+  sendOTPForForgotPassword,
+} = require("../../utils/mailConfig");
 
 // AIRTEL SEND SMS
 // const CUSTOMER_ID = process.env.CUSTOMER_ID;
@@ -18,54 +18,54 @@ const url = "https://api.brevo.com/v3/smtp/email";
 // const AIRTLE_URL = "https://iqsms.airtel.in/api/v1/send-sms";
 // const AUTH_HEADDER = process.env.BASE64_AUTH;
 
-const sendOnboardingEmail = async (email, username, mobilenumber, password) => {
-  const emailData = {
-    sender: {
-      name: "Kadagam Ventures Private Limited",
-      email: "nithyaevents24@gmail.com",
-    },
-    to: [{ email: email, name: username }],
-    subject: "Welcome to Nithyaevent",
-    htmlContent: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          /* Include your CSS styles here */
-        </style>
-      </head>
-      <body>
-        <h4>Dear ${username},</h4>
-        <p>Welcome to Nithyaevent! We’re thrilled to have you as a valued partner and look forward to helping you grow your business with us.</p>
-        <p>Please log in and complete your profile to proceed further.</p>
-        <h4>Your Account Details:</h4>         
-        <p><strong>Username:</strong> ${mobilenumber}</p>
-        <p><strong>Password:</strong> ${password}</p>
-                
-        <p>We’re committed to supporting you every step of the way. Let’s work together to create a great experience for your customers!</p>
-        <p>Best Regards,</p>
-        <p><strong>Support Team</strong><br>Nithyaevent<br><a href="mailto:support@nithyaevent.com">support@nithyaevent.com</a> | 8867999997</p>
-        <p>&copy; 2024 All Rights Reserved, Nithyaevent<br>Designed & Developed by Kadagam Ventures Private Limited</p>
-      </body>
-      </html>
-    `,
-  };
-  try {
-    const response = await axios.post(url, emailData, {
-      headers: {
-        "Content-Type": "application/json",
-        "api-key": apiKey,
-      },
-    });
-    console.log("Email sent successfully:", response.data);
-  } catch (error) {
-    console.error(
-      "Error sending email:",
-      error.response?.data || error.message
-    );
-    throw new Error("Failed to send onboarding email");
-  }
-};
+// const sendOnboardingEmail = async (email, username, mobilenumber, password) => {
+//   const emailData = {
+//     sender: {
+//       name: "Kadagam Ventures Private Limited",
+//       email: "nithyaevents24@gmail.com",
+//     },
+//     to: [{ email: email, name: username }],
+//     subject: "Welcome to Nithyaevent",
+//     htmlContent: `
+//       <!DOCTYPE html>
+//       <html>
+//       <head>
+//         <style>
+//           /* Include your CSS styles here */
+//         </style>
+//       </head>
+//       <body>
+//         <h4>Dear ${username},</h4>
+//         <p>Welcome to Nithyaevent! We’re thrilled to have you as a valued partner and look forward to helping you grow your business with us.</p>
+//         <p>Please log in and complete your profile to proceed further.</p>
+//         <h4>Your Account Details:</h4>
+//         <p><strong>Username:</strong> ${mobilenumber}</p>
+//         <p><strong>Password:</strong> ${password}</p>
+
+//         <p>We’re committed to supporting you every step of the way. Let’s work together to create a great experience for your customers!</p>
+//         <p>Best Regards,</p>
+//         <p><strong>Support Team</strong><br>Nithyaevent<br><a href="mailto:support@nithyaevent.com">support@nithyaevent.com</a> | 8867999997</p>
+//         <p>&copy; 2024 All Rights Reserved, Nithyaevent<br>Designed & Developed by Kadagam Ventures Private Limited</p>
+//       </body>
+//       </html>
+//     `,
+//   };
+//   try {
+//     const response = await axios.post(url, emailData, {
+//       headers: {
+//         "Content-Type": "application/json",
+//         "api-key": apiKey,
+//       },
+//     });
+//     console.log("Email sent successfully:", response.data);
+//   } catch (error) {
+//     console.error(
+//       "Error sending email:",
+//       error.response?.data || error.message
+//     );
+//     throw new Error("Failed to send onboarding email");
+//   }
+// };
 
 // const sendWelcomeSMS = async (mobilenumber) => {
 //   try {
@@ -137,7 +137,7 @@ exports.register = async (req, res) => {
     // Send onboarding email
     try {
       await sendOnboardingEmail(email, username, mobilenumber, password);
-      await sendSMS(mobilenumber, welcomeMessage, SMS_TYPE);
+      // await sendSMS(mobilenumber, welcomeMessage, SMS_TYPE);
     } catch (error) {
       console.error("Onboarding email error:", error.message);
       return res
@@ -220,7 +220,7 @@ exports.loginWithMobileNumber = async (req, res) => {
     // const otpMessage = `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
     const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
 
-    const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
+    // const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
 
     if (!smsResponse.success) {
       return res.status(500).json({ message: "Failed to send OTP" });
@@ -287,6 +287,35 @@ exports.verifyOTP = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+// forgot password
+exports.sendOtpToMail = async (req, res) => {
+  const { email } = req.body;
+  try {
+    if (!email) {
+      return res.status(400).json({ error: "email is required" });
+    }
+
+    const user = await UserSchema.findOne({ email });
+    if (!user) {
+      console.log("email not match");
+      return res.status(400).json({ message: "email doesn't exists" });
+    }
+
+    const otp = crypto.randomInt(100000, 999999);
+    const expiry = new Date(Date.now() + 60 * 1000);
+
+    await otpSchema.create({ email, otp, expiry });
+
+    await sendOTPForForgotPassword(email, otp);
+    res.status(200).json({
+      message: "OTP sent to your registerd email id.",
+      // user,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 // Controller for getting user profile
 exports.getProfile = async (req, res) => {
@@ -344,7 +373,7 @@ exports.updateProfile = async (req, res) => {
       findUser.pan_back_image = req.body.pan_back_image;
     }
 
-    findUser.company_profile.push({
+    findUser.company_profile = {
       company_type,
       company_name,
       designation,
@@ -354,7 +383,7 @@ exports.updateProfile = async (req, res) => {
       cin_number,
       pan_front_image: req.body.pan_front_image,
       pan_back_image: req.body.pan_back_image,
-    });
+    };
 
     let updatedUser = await UserSchema.findOneAndUpdate(
       { _id: userId },

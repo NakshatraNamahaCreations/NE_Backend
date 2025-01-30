@@ -12,6 +12,7 @@ const {
   updateProfile,
   addAddress,
   deleteUser,
+  sendOtpToMail,
 } = require("../../controllers/user/userController");
 // const authMiddleware = require("../../controllers/middleware/authMiddleware");
 const multer = require("multer");
@@ -35,10 +36,15 @@ const upload = multer({
 
 const uploadToS3 = async (req, res, next) => {
   try {
-    if (!req.files) {
-      throw new Error("No files provided");
+    // if (!req.files) {
+    //   throw new Error("No files provided");
+    // }
+    if (!req.files || Object.keys(req.files).length === 0) {
+      // No files provided; continue to the next middleware
+      req.body.pan_front_image = null;
+      req.body.pan_back_image = null;
+      return next();
     }
-
     const uploadedFiles = {};
     for (const [key, files] of Object.entries(req.files)) {
       uploadedFiles[key] = await Promise.all(
@@ -96,5 +102,6 @@ router.put(
 );
 router.put("/save-delivery-address/:id", addAddress);
 router.delete("/profile", deleteUser);
+router.post("/send-otp-email", sendOtpToMail);
 
 module.exports = router;
