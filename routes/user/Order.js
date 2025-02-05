@@ -5,6 +5,7 @@ const {
   rescheduleOrder,
   getUserOrder,
   getAllOrder,
+  getServiceOrders,
   getSellerProducts,
   getOrderByOrderId,
   cancelOrder,
@@ -154,6 +155,7 @@ router.put(
 );
 router.get("/get-a-order/:id", getUserOrder);
 router.get("/get-vendor-order/:id", getSellerProducts);
+router.get("/get-service-orders/:id", getServiceOrders);
 router.get("/get-cancelled-events", getCancelledOrder);
 router.get("/getallorder", getAllOrder);
 router.get("/get-order-by-order-id/:id", getOrderByOrderId);

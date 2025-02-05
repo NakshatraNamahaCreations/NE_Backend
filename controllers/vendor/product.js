@@ -2,10 +2,6 @@ const productSchema = require("../../models/vendor/product");
 const notificationSchema = require("../../models/notifications/vendor-inapp");
 exports.addProduct = async (req, res) => {
   try {
-    // console.log("Product image paths:", req.body.product_image); // Debug log
-    // console.log("Product video path:", req.body.product_video); // Debug log
-
-    // Ensure product_image and product_video are passed correctly
     if (!req.body.product_image || !Array.isArray(req.body.product_image)) {
       return res.status(400).json({ message: "Product images are required" });
     }
@@ -34,30 +30,12 @@ exports.addProduct = async (req, res) => {
       retuning_date,
     } = req.body;
 
-    // Ensure Specifications are in the correct format
-    // below validation not required
     let specificationsArray;
     try {
       specificationsArray = JSON.parse(Specifications);
     } catch (e) {
       console.log("specifications:", e);
-      // return res
-      //   .status(400)
-      //   .json({ message: "Add atleast one specifications" });
     }
-    // if (
-    //   !Array.isArray(specificationsArray) ||
-    //   specificationsArray.some((prop) => !prop.name || !prop.value)
-    // ) {
-    //   return res
-    //     .status(400)
-    //     .json({ message: "Add atleast one specifications" });
-    // }
-    // ........................
-    // Process images and video
-    // const product_image = req.files.images.map((file) => file.path);
-    // const product_video = req.files.video ? req.files.video[0].path : null;
-    // Create a new product
     const newProduct = new productSchema({
       shop_name,
       vendor_id,
@@ -65,8 +43,8 @@ exports.addProduct = async (req, res) => {
       product_category,
       product_type,
       product_name,
-      product_image: req.body.product_image, // Use the value assigned in middleware
-      product_video: req.body.product_video, // Use the value assigned in middleware
+      product_image: req.body.product_image,
+      product_video: req.body.product_video,
       mrp_rate,
       product_price,
       discount,
@@ -82,15 +60,16 @@ exports.addProduct = async (req, res) => {
       product_color,
       retuning_date,
       approval_status: "Under Review",
-      Specifications: specificationsArray, // This will include all the specifications
+      Specifications: specificationsArray,
     });
     await newProduct.save();
+    console.log("Product added successfully:", newProduct);
     res
       .status(200)
       .json({ message: "Product added successfully", product: newProduct });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Server error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -118,7 +97,7 @@ exports.getAllRentalProduct = async (req, res) => {
       console.log("no products found");
       return res.status(404).json({ message: "products not found" });
     }
-    res.status(200).json(allRentalProduct);
+    res.status(200).json({ data: allRentalProduct });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

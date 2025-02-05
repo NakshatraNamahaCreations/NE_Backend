@@ -137,7 +137,7 @@ exports.register = async (req, res) => {
     // Send onboarding email
     try {
       await sendOnboardingEmail(email, username, mobilenumber, password);
-      await sendSMS(mobilenumber, welcomeMessage, SMS_TYPE);
+      //  await sendSMS(mobilenumber, welcomeMessage, SMS_TYPE);
     } catch (error) {
       console.error("Onboarding email error:", error.message);
       return res
@@ -253,7 +253,7 @@ exports.resendOTP = async (req, res) => {
     // const otpMessage = `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
     const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
 
-    const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
+    // const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
 
     if (!smsResponse.success) {
       return res.status(500).json({ message: "Failed to send OTP" });

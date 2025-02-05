@@ -137,6 +137,24 @@ exports.getPayoutsByIds = async (req, res) => {
   }
 };
 
+exports.getPayoutAmountsByVendorID = async (req, res) => {
+  try {
+    const payout = await payoutSchema.find({ seller_id: req.params.id });
+    if (payout.length === 0) {
+      console.log("payout not found");
+      return res.status(404).json({ message: "Payout not found" });
+    }
+    const totalPayout = payout
+      .filter((item) => item.payout_status === "Processed")
+      .reduce((acc, curr) => acc + curr.payout_amount, 0);
+    // console.log("totalPayout", totalPayout);
+    return res.status(200).json({ data: parseFloat(totalPayout.toFixed(2)) });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.changeTicketStatus = async (req, res) => {
   try {
     const { ticket_status } = req.body;

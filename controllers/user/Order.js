@@ -203,7 +203,7 @@ exports.userOrder = async (req, res) => {
     await newOrder.save();
     // Notify the vendors about the order
     for (const product of parsedProductData) {
-      const notification = {
+      const productNotification = {
         vendor_id: product.sellerId,
         notification_type: "product_booking",
         message: `Your product "${product.productName}" has been booked for the ${event_name} from ${event_date}.`,
@@ -212,7 +212,19 @@ exports.userOrder = async (req, res) => {
         status: "unread",
         created_at: new Date(),
       };
-      await notificationSchema.create(notification);
+      await notificationSchema.create(productNotification);
+    }
+    for (const service of parsedServiceData) {
+      const serviceNotification = {
+        vendor_id: service.id,
+        notification_type: "service_booking",
+        message: `Your Service has been booked for the ${event_name} from ${event_date}.`,
+        product_id: service.id,
+        metadata: { user_id, order_status },
+        status: "unread",
+        created_at: new Date(),
+      };
+      await notificationSchema.create(serviceNotification);
     }
     // mail the user with the order details
     const deliveryMessage = `Hello Naveen,Your one-time`;
@@ -224,7 +236,7 @@ exports.userOrder = async (req, res) => {
         user_name,
         user_mailid
       );
-      await sendSMS(user_mobile_number, deliveryMessage, SMS_TYPE);
+      // await sendSMS(user_mobile_number, deliveryMessage, SMS_TYPE);
     } catch (error) {
       console.error("Order email error:", error.message);
       return res
@@ -283,6 +295,43 @@ exports.getSellerProducts = async (req, res) => {
     // If no products are found, return 404
     if (filteredResponse.length === 0) {
       return res.status(404).json({ message: "Products not found" });
+    }
+
+    // Return the filtered response
+    return res.status(200).json(filteredResponse);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getServiceOrders = async (req, res) => {
+  try {
+    const sellerId = req.params.id;
+
+    const allOrders = await UserOrder.find();
+
+    const filteredResponse = allOrders
+      .map((order) => {
+        const filteredService = order.service_data.filter(
+          (service) => service.id === sellerId
+        );
+
+        if (filteredService.length > 0) {
+          return {
+            _id: order._id, // Include the order ID
+            event_name: order.event_name, // Include the event name
+            ...order._doc, // Spread all other properties of the order
+            service_data: filteredService, // Include only filtered products
+          };
+        }
+        return null; // Exclude orders without matching products
+      })
+      .filter(Boolean); // Remove null values
+
+    // If no products are found, return 404
+    if (filteredResponse.length === 0) {
+      return res.status(404).json({ message: "service not found" });
     }
 
     // Return the filtered response

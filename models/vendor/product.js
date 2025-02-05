@@ -30,8 +30,8 @@ const productSchema = new mongoose.Schema(
     retuning_date: Number,
     Specifications: [
       {
-        name: { type: String, required: true },
-        value: { type: String, required: true },
+        name: { type: String },
+        value: { type: String },
       },
     ],
     Reviews: [

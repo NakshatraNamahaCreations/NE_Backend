@@ -6,6 +6,7 @@ const userOrderSchema = new mongoose.Schema(
     // product_id: String,
     // product_image: String,
     event_date: String,
+    booking_from: String,
     event_start_date: String,
     event_end_date: String,
     event_name: String,

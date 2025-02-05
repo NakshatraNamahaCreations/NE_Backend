@@ -46,6 +46,8 @@ exports.vendorRegister = async (req, res) => {
       ifsc_code,
       bank_branch_name,
       is_approved: false,
+      commission_percentage: 22,
+      commission_tax: 18,
     });
 
     await newVendor.save();
@@ -126,17 +128,13 @@ exports.addServiceUserBusinessDetails = async (req, res) => {
       website_url,
       gst_number,
       pricing,
-      business_hours,
+      // business_hours,
       shop_name,
     } = req.body;
 
-    // const shopImageOrLogo = req.body.shop_image_or_logo
-    //   ? req.body.shop_image_or_logo
-    //   : null;
-
-    const parsedBusinessHours = Array.isArray(business_hours)
-      ? business_hours
-      : JSON.parse(business_hours);
+    // const parsedBusinessHours = Array.isArray(business_hours)
+    //   ? business_hours
+    //   : JSON.parse(business_hours);
 
     const updatedVendor = await vendorSchema.findByIdAndUpdate(
       userId,
@@ -146,9 +144,11 @@ exports.addServiceUserBusinessDetails = async (req, res) => {
         website_url: website_url,
         pricing: pricing,
         gst_number: gst_number,
-        business_hours: parsedBusinessHours,
+        // business_hours: parsedBusinessHours,
         experience_in_business: experience_in_business,
         shop_image_or_logo: req.body.shop_image_or_logo,
+        // commission_percentage: 22,
+        // commission_tax: 18,
       },
       { new: true }
     );
