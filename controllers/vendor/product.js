@@ -89,6 +89,12 @@ exports.getAllProduct = async (req, res) => {
 
 exports.getAllRentalProduct = async (req, res) => {
   try {
+    const limit = parseInt(req.query.limit) || 10;
+
+    if (limit <= 0) {
+      return res.status(400).json({ message: "Invalid limit parameter" });
+    }
+
     const allRentalProduct = await productSchema.find({
       product_type: "rental",
       approval_status: "Approved",
@@ -98,6 +104,78 @@ exports.getAllRentalProduct = async (req, res) => {
       return res.status(404).json({ message: "products not found" });
     }
     res.status(200).json({ data: allRentalProduct });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// exports.getRelevantProducts = async (req, res) => {
+//   try {
+//     const limit = parseInt(req.query.limit) || 10;
+
+//     if (limit <= 0) {
+//       return res.status(400).json({ message: "Invalid limit parameter" });
+//     }
+//     const category = req.query.product_category;
+//     console.log("category", category);
+
+//     const allProducts = await productSchema
+//       .find({
+//         product_type: "rental",
+//         approval_status: "Approved",
+//         product_category: category,
+//       })
+//       .limit(limit);
+//     if (allProducts.length === 0) {
+//       console.log("no products found");
+//       return res.status(404).json({ message: "products not found" });
+//     }
+//     res.status(200).json({ data: allProducts, categoryName: category });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+exports.getRelevantProducts = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit); // Parse limit (could be undefined)
+    const page = parseInt(req.query.page) || 1; // Default page is 1
+    const skip = (page - 1) * limit; // Calculate skip only if limit is provided
+
+    if (limit && (limit <= 0 || page <= 0)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid limit or page parameter" });
+    }
+
+    const category = req.query.product_category;
+    console.log("category", category);
+
+    // Base query
+    const query = {
+      product_type: "rental",
+      approval_status: "Approved",
+      product_category: category,
+    };
+
+    // Fetch products
+    let allProducts;
+    if (limit) {
+      // Apply pagination if limit is provided
+      allProducts = await productSchema.find(query).skip(skip).limit(limit);
+    } else {
+      // Return all products if limit is not provided
+      allProducts = await productSchema.find(query);
+    }
+
+    if (allProducts.length === 0) {
+      console.log("No products found");
+      return res.status(404).json({ message: "Products not found" });
+    }
+
+    res.status(200).json({ data: allProducts, categoryName: category });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

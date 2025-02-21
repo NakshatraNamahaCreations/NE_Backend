@@ -3,7 +3,7 @@ const router = express.Router();
 const {
   userOrder,
   rescheduleOrder,
-  getUserOrder,
+  getUserOrderByUserId,
   getAllOrder,
   getServiceOrders,
   getSellerProducts,
@@ -15,6 +15,7 @@ const {
   addDeliveryImges,
   deliveryOrder,
   raiseTickets, //update in server
+  // initiateCallUserToVendor,
 } = require("../../controllers/user/Order");
 const path = require("path");
 const multer = require("multer");
@@ -153,7 +154,7 @@ router.put(
   uploadToS3,
   rescheduleOrder
 );
-router.get("/get-a-order/:id", getUserOrder);
+router.get("/get-a-order/:id", getUserOrderByUserId);
 router.get("/get-vendor-order/:id", getSellerProducts);
 router.get("/get-service-orders/:id", getServiceOrders);
 router.get("/get-cancelled-events", getCancelledOrder);
@@ -170,4 +171,5 @@ router.put(
   addDeliveryImges
 );
 router.put("/delivery-order/:id", deliveryOrder);
+// router.post("/initiate-call-from-user-to-vendor", initiateCallUserToVendor);
 module.exports = router;

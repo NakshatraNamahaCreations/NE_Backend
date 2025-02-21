@@ -455,7 +455,9 @@ exports.getVendorProfile = async (req, res) => {
 
 exports.getAllVendor = async (req, res) => {
   try {
-    const allVendor = await vendorSchema.find({ is_approved: true });
+    const allVendor = await vendorSchema
+      .find({ is_approved: true })
+      .sort({ _id: -1 });
     if (allVendor.length > 0) {
       return res.status(200).json(allVendor);
     } else {
@@ -483,10 +485,12 @@ exports.getAllVendorsForAdmin = async (req, res) => {
 
 exports.getOnlyProductVendor = async (req, res) => {
   try {
-    const productVendor = await vendorSchema.find({
-      profession: "Vendor & Seller",
-      is_approved: true,
-    });
+    const productVendor = await vendorSchema
+      .find({
+        profession: "Vendor & Seller",
+        is_approved: true,
+      })
+      .sort({ _id: -1 });
     if (productVendor.length > 0) {
       return res.status(200).json({ data: productVendor });
     } else {
@@ -500,10 +504,12 @@ exports.getOnlyProductVendor = async (req, res) => {
 
 exports.getVendorByServiceName = async (req, res) => {
   try {
-    const vendorList = await vendorSchema.find({
-      profession: req.params.name,
-      is_approved: true,
-    });
+    const vendorList = await vendorSchema
+      .find({
+        profession: req.params.name,
+        is_approved: true,
+      })
+      .sort({ _id: -1 });
     if (vendorList.length > 0) {
       return res.status(200).json({ data: vendorList });
     } else {

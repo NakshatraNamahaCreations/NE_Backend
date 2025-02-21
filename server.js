@@ -43,6 +43,7 @@ const payoutConfig = require("./routes/master/payout_config");
 const technician = require("./routes/master/technician");
 const technicianPayouts = require("./routes/payouts/tech-payout");
 const vendorInApp = require("./routes/notifications/vendor-inapp");
+const ivrCall = require("./routes/airtel_ivr/call_process");
 
 const { default: axios } = require("axios");
 // Middleware
@@ -77,6 +78,7 @@ app.use("/api/user-tnc", userTnC);
 app.use("/api/technician", technician);
 app.use("/api/technician-payouts", technicianPayouts);
 app.use("/api/vendor-inapp", vendorInApp);
+app.use("/api/ivr", ivrCall);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

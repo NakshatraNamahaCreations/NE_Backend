@@ -252,7 +252,7 @@ exports.userOrder = async (req, res) => {
 
 exports.getAllOrder = async (req, res) => {
   try {
-    const allProduct = await UserOrder.find();
+    const allProduct = await UserOrder.find().sort({ _id: -1 });
 
     if (allProduct.length < 0) {
       return res.status(404).json({ message: "products not found" });
@@ -342,11 +342,11 @@ exports.getServiceOrders = async (req, res) => {
   }
 };
 
-exports.getUserOrder = async (req, res) => {
+exports.getUserOrderByUserId = async (req, res) => {
   try {
     const userOrder = await UserOrder.find({
       user_id: String(req.params.id),
-    });
+    }).sort({ _id: -1 });
     if (!userOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
@@ -361,7 +361,7 @@ exports.getOrderByOrderId = async (req, res) => {
   try {
     const orderId = await UserOrder.findOne({
       _id: String(req.params.id),
-    });
+    }).sort({ _id: -1 });
     if (!orderId) {
       return res.status(404).json({ message: "Order not found" });
     }

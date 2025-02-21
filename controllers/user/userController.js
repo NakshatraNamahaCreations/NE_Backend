@@ -21,7 +21,7 @@ const url = "https://api.brevo.com/v3/smtp/email";
 const sendOnboardingEmail = async (email, username, mobilenumber, password) => {
   const emailData = {
     sender: {
-      name: "Kadagam Ventures Private Limited",
+      name: "Nithyaevent",
       email: "nithyaevents24@gmail.com",
     },
     to: [{ email: email, name: username }],
@@ -44,7 +44,7 @@ const sendOnboardingEmail = async (email, username, mobilenumber, password) => {
                 
         <p>We’re committed to supporting you every step of the way. Let’s work together to create a great experience for your customers!</p>
         <p>Best Regards,</p>
-        <p><strong>Support Team</strong><br>Nithyaevent<br><a href="mailto:support@nithyaevent.com">support@nithyaevent.com</a> | 8867999997</p>
+        <p><strong>Support Team</strong><br>Nithyaevent<br><a href="mailto:support@nithyaevents.com">support@nithyaevents.com</a> | 99801370001</p>
         <p>&copy; 2024 All Rights Reserved, Nithyaevent<br>Designed & Developed by Kadagam Ventures Private Limited</p>
       </body>
       </html>
@@ -220,11 +220,12 @@ exports.loginWithMobileNumber = async (req, res) => {
     // const otpMessage = `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
     const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
 
-    const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
+    // const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
+    // console.log("smsResponse", smsResponse);
 
-    if (!smsResponse.success) {
-      return res.status(500).json({ message: "Failed to send OTP" });
-    }
+    // if (!smsResponse.success) {
+    //   return res.status(500).json({ message: "Failed to send OTP" });
+    // }
 
     res.status(200).json({
       message: "Login successful. OTP sent to your mobile number.",
@@ -242,8 +243,8 @@ exports.resendOTP = async (req, res) => {
   try {
     const user = await UserSchema.findOne({ mobilenumber });
     if (!user) {
-      console.log("mobilenumber not match");
-      return res.status(400).json({ message: "mobilenumber not match" });
+      console.log("Mobile Number not match");
+      return res.status(400).json({ message: "mobile number not match" });
     }
 
     const otp = crypto.randomInt(100000, 999999);
@@ -253,7 +254,7 @@ exports.resendOTP = async (req, res) => {
     // const otpMessage = `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
     const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
 
-    // const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
+    const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
 
     if (!smsResponse.success) {
       return res.status(500).json({ message: "Failed to send OTP" });
