@@ -12,6 +12,7 @@ const {
   updateProfile,
   addAddress,
   deleteUser,
+  verifyIdToken,
 } = require("../../controllers/user/userController");
 // const authMiddleware = require("../../controllers/middleware/authMiddleware");
 const multer = require("multer");
@@ -81,6 +82,7 @@ router.post("/user-register", register);
 router.post("/user-login", login);
 router.post("/re-sent-otp", resendOTP);
 router.post("/verify-otp", verifyOTP);
+router.post("/auth/validate-token", verifyIdToken);
 router.post("/login-with-mobile-number", loginWithMobileNumber);
 router.get("/get-all-user", getAllUser);
 router.get("/get-user-profile/:id", getProfile);

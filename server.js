@@ -22,6 +22,7 @@ mongoose
 const userauthRoutes = require("./routes/user/users");
 const vendorauthRoutes = require("./routes/vendor/vendor");
 const product = require("./routes/vendor/product");
+const vendorService = require("./routes/vendor/add-service");
 const order = require("./routes/vendor/order");
 const team = require("./routes/team/team");
 const service = require("./routes/service/service");
@@ -58,6 +59,7 @@ app.use("/public", express.static("public"));
 app.use("/api/user", userauthRoutes);
 app.use("/api/vendor", vendorauthRoutes);
 app.use("/api/product", product);
+app.use("/api/vendor-service", vendorService);
 app.use("/api/order", order);
 app.use("/api/team", team);
 app.use("/api/service", service);

@@ -5,6 +5,10 @@ const jwt = require("jsonwebtoken");
 const { sendSMS } = require("../../utils/sendSMS");
 const otpSchema = require("../../models/otp/otp");
 const crypto = require("crypto");
+const { OAuth2Client } = require("google-auth-library");
+const CLIENT_ID =
+  "810184338477-pmsdub9rnjnfuki59auk38m0ktcl5u2v.apps.googleusercontent.com";
+const client = new OAuth2Client(CLIENT_ID || process.env.GOOGLE_CLIENT_ID);
 
 // BREVO SEND EMAIL
 const apiKey = process.env.SENDINBLUE_API_KEY;
@@ -286,6 +290,32 @@ exports.verifyOTP = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.verifyIdToken = async (req, res) => {
+  const { token, email } = req.body;
+  console.log("Received token:", token);
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: CLIENT_ID || process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload) {
+      return res.status(400).json({ message: "Invalid token" });
+    }
+    const user = await UserSchema.findOne({ email }).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User does not exist" });
+    }
+
+    res.status(200).json({ message: "Login successfully", user });
+  } catch (error) {
+    console.error("Google Sign-In Verification:", error);
+    res.status(500).json({ error: "Invalid token" });
   }
 };
 
