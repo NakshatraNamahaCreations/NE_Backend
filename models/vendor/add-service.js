@@ -9,6 +9,7 @@ const addServices = new mongoose.Schema(
     service_description: String,
     service_category: String,
     service_name: String,
+    service_subcategory: String,
     isFeatured: Boolean,
     additional_images: [String],
     approval_status: String,

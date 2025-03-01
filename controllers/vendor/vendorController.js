@@ -2,6 +2,9 @@ const vendorSchema = require("../../models/vendor/vendor");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { default: mongoose } = require("mongoose");
+const crypto = require("crypto");
+const otpSchema = require("../../models/otp/otp");
+const { sendOTP } = require("../../utils/sendMail");
 
 exports.vendorRegister = async (req, res) => {
   try {
@@ -794,6 +797,82 @@ exports.deleteVendor = async (req, res) => {
       .json({ message: "Vendor deleted successfully", vendor: deletedVendor });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await vendorSchema.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    // console.log("user", user.vendor_name);
+
+    const otp = crypto.randomInt(100000, 999999);
+    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiry
+
+    // Check if an existing OTP exists and update it, otherwise create a new one.
+    const existingOtp = await otpSchema.findOne({ email });
+    if (existingOtp) {
+      existingOtp.otp = otp;
+      existingOtp.expiry = expiry;
+      await existingOtp.save();
+    } else {
+      await otpSchema.create({ email, otp, expiry });
+    }
+    // console.log("otp", otp);
+
+    await sendOTP(email, otp, user.vendor_name);
+    return res
+      .status(200)
+      .json({ message: "Password reset OTP sent to your email", user });
+  } catch (error) {
+    console.error("Error in forgotPassword:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.verifyOTP = async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    const record = await otpSchema.findOne({ email, otp });
+    if (!record) {
+      console.log("Invalid OTP");
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+    if (record.expiry < new Date()) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
+    await otpSchema.deleteMany({ email });
+    res.status(200).json({ message: "OTP verified successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    // Find the user by email
+    const user = await vendorSchema.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update the user's password
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error("Error in resetPassword:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

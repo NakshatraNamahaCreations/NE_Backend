@@ -10,6 +10,7 @@ exports.addVendorService = async (req, res) => {
       price,
       service_description,
       service_category,
+      service_subcategory,
       service_name,
       additional_services,
     } = req.body;
@@ -58,6 +59,7 @@ exports.addVendorService = async (req, res) => {
       price,
       service_description,
       service_category,
+      service_subcategory,
       service_name,
       additional_images: req.body.additional_images,
       approval_status: "Under Review",

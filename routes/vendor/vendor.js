@@ -28,6 +28,8 @@ const {
   getAllVendorsForAdmin,
   addCommissions,
   deleteVendor,
+  forgotPassword,
+  verifyOTP,
 } = require("../../controllers/vendor/vendorController");
 const multer = require("multer");
 const path = require("path");
@@ -199,5 +201,7 @@ router.put("/vendor-disapprove/:id", vendorDisapprove);
 router.get("/get-all-vendors-for-admin", getAllVendorsForAdmin);
 router.put("/add-commissions/:id", addCommissions);
 router.delete("/delete-vendor/:id", deleteVendor);
+router.post("/forgot-password", forgotPassword);
+router.post("/verify-email-otp", verifyOTP);
 
 module.exports = router;
