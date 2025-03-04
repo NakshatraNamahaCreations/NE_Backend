@@ -30,7 +30,8 @@ const userOrderSchema = new mongoose.Schema(
     user_mailid: String,
     user_mobile_number: String,
     venue_name: String,
-    venue_open_time: String,
+    setup_end_time: String,
+    setup_start_time: String,
     location_lat: {
       type: mongoose.Types.Decimal128,
       default: null,
