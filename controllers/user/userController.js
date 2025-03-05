@@ -6,6 +6,7 @@ const { sendSMS } = require("../../utils/sendSMS");
 const otpSchema = require("../../models/otp/otp");
 const crypto = require("crypto");
 const { OAuth2Client } = require("google-auth-library");
+const { sendOTP, sendResetMessage } = require("../../utils/sendMail");
 const CLIENT_ID =
   "810184338477-pmsdub9rnjnfuki59auk38m0ktcl5u2v.apps.googleusercontent.com";
 const client = new OAuth2Client(CLIENT_ID || process.env.GOOGLE_CLIENT_ID);
@@ -445,5 +446,111 @@ exports.addAddress = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ status: false, error: error.message });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await UserSchema.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    // console.log("user", user.vendor_name);
+
+    const otp = crypto.randomInt(100000, 999999);
+    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiry
+
+    // Check if an existing OTP exists and update it, otherwise create a new one.
+    const existingOtp = await otpSchema.findOne({ email });
+    if (existingOtp) {
+      existingOtp.otp = otp;
+      existingOtp.expiry = expiry;
+      await existingOtp.save();
+    } else {
+      await otpSchema.create({ email, otp, expiry });
+    }
+    // console.log("otp", otp);
+
+    await sendOTP(email, otp, user.vendor_name);
+    return res
+      .status(200)
+      .json({
+        message: "Password reset OTP sent to your email",
+        user: user.email,
+      });
+  } catch (error) {
+    console.error("Error in Send EMail OTP for Forgot password:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.resendEmailOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await UserSchema.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const otp = crypto.randomInt(100000, 999999);
+    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiry
+
+    const existingOtp = await otpSchema.findOne({ email });
+    if (existingOtp) {
+      existingOtp.otp = otp;
+      existingOtp.expiry = expiry;
+      await existingOtp.save();
+    } else {
+      await otpSchema.create({ email, otp, expiry });
+    }
+    // console.log("otp", otp);
+
+    await sendOTP(email, otp, user.vendor_name);
+    return res.status(200).json({ message: "OTP Resent to email", user });
+  } catch (error) {
+    console.error("Error in Resent Email OTP:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.verifyEmailOTP = async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    const record = await otpSchema.findOne({ email, otp });
+    if (!record) {
+      console.log("Invalid OTP");
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+    if (record.expiry < new Date()) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
+    await otpSchema.deleteMany({ email });
+    res.status(200).json({ message: "OTP verified successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    const user = await UserSchema.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    console.log("password", newPassword);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+    await user.save();
+    await sendResetMessage(email, user.username);
+
+    return res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error("Error in resetPassword:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };

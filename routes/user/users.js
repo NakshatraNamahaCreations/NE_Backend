@@ -13,6 +13,10 @@ const {
   addAddress,
   deleteUser,
   verifyIdToken,
+  forgotPassword,
+  verifyEmailOTP,
+  resendEmailOTP,
+  resetPassword,
 } = require("../../controllers/user/userController");
 // const authMiddleware = require("../../controllers/middleware/authMiddleware");
 const multer = require("multer");
@@ -82,6 +86,10 @@ router.post("/user-register", register);
 router.post("/user-login", login);
 router.post("/re-sent-otp", resendOTP);
 router.post("/verify-otp", verifyOTP);
+router.post("/forgot-user-password", forgotPassword);
+router.post("/resent-email-otp", resendEmailOTP);
+router.post("/verify-email-otp", verifyEmailOTP);
+router.post("/reset-password", resetPassword);
 router.post("/auth/validate-token", verifyIdToken);
 router.post("/login-with-mobile-number", loginWithMobileNumber);
 router.get("/get-all-user", getAllUser);

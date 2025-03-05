@@ -73,3 +73,62 @@ exports.sendOTP = async (email, otp, username) => {
     throw new Error("Failed to send onboarding email");
   }
 };
+
+exports.sendResetMessage = async (email, userName) => {
+  const emailData = {
+    sender: {
+      name: "Nithyaevent",
+      email: "nithyaevents24@gmail.com",
+    },
+    to: [{ email: email, name: userName }],
+    subject: "Password Reset Successful",
+    htmlContent: `
+      <!DOCTYPE html>
+<html>
+ <style> 
+    .body-text {
+      font-size: 16px;
+    }
+      .body-footer-text{
+      font-size:14px;
+      }
+  </style>
+  <body>
+
+    <p class="body-text">Dear ${userName} </p>
+
+    <p class="body-text">Your password has been successfully reset.</p>
+     
+     
+    <p class="body-footer-text">
+      <strong>Support Team</strong><br />Nithyaevent<br /><a
+        href="mailto:support@nithyaevents.com"
+        >support@nithyaevents.com</a
+      >
+      | 9980137000
+    </p>
+    <p class="body-footer-text">
+      &copy; 2024 All Rights Reserved, Nithyaevent<br />Designed & Developed by
+      Kadagam Ventures Private Limited
+    </p>
+  </body>
+</html>
+
+    `,
+  };
+  try {
+    const response = await axios.post(url, emailData, {
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": apiKey,
+      },
+    });
+    console.log("Email sent successfully:", response.data);
+  } catch (error) {
+    console.error(
+      "Error sending email:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to send onboarding email");
+  }
+};
