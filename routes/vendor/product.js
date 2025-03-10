@@ -26,6 +26,7 @@ const {
   addProductsViaExcel,
   addProductImage,
   editProduct,
+  searchProduct,
 } = require("../../controllers/vendor/product");
 
 const s3 = new S3Client({
@@ -120,6 +121,7 @@ router.put("/product-approved/:id", approveProduct);
 router.put("/product-disapproved/:id", disApproveProduct);
 router.delete("/delete-product/:id", deleteProduct);
 router.post("/add-products-via-excel", addProductsViaExcel);
+router.post("/search-product", searchProduct);
 
 router.put(
   "/edit-product/:id",

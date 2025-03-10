@@ -6,6 +6,7 @@ exports.initiateCallUserToVendor = async (req, res) => {
     const { seller_id } = req.body;
     const findVendor = await vendorSchema.findOne({ _id: seller_id });
     if (!findVendor) {
+      console.log("vendor not found");
       return res.status(404).json({ message: "Vendor not found" });
     }
     console.log("findVendor", findVendor.mobile_number);
@@ -15,7 +16,7 @@ exports.initiateCallUserToVendor = async (req, res) => {
       return res.status(500).json({ message: "Failed to initiated call" });
     }
 
-    return res.json({ message: "Call initiated successfully" });
+    return res.status(200).json({ message: "Call initiated successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

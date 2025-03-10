@@ -234,7 +234,7 @@ exports.loginWithMobileNumber = async (req, res) => {
 
     res.status(200).json({
       message: "Login successful. OTP sent to your mobile number.",
-      user,
+      user: user,
     });
   } catch (error) {
     console.error(error);
@@ -473,12 +473,10 @@ exports.forgotPassword = async (req, res) => {
     // console.log("otp", otp);
 
     await sendOTP(email, otp, user.vendor_name);
-    return res
-      .status(200)
-      .json({
-        message: "Password reset OTP sent to your email",
-        user: user.email,
-      });
+    return res.status(200).json({
+      message: "Password reset OTP sent to your email",
+      user: user.email,
+    });
   } catch (error) {
     console.error("Error in Send EMail OTP for Forgot password:", error);
     res.status(500).json({ message: "Server error" });

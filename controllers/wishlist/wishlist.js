@@ -79,7 +79,7 @@ exports.removeWishlist = async (req, res) => {
     if (!wishlist) {
       return res.status(404).json({ message: "Wishlist item not found" });
     }
-    res.status(200).json({ message: "Wishlist removed successfully" });
+    return res.status(200).json({ message: "Wishlist removed successfully" });
   } catch (err) {
     console.log("error removing wishlist", err);
     res.status(500).json({ message: "Error removing wishlist", error: err });

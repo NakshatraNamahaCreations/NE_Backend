@@ -8,7 +8,7 @@ const INITIATE_CALL_URL =
 const HEADER_AUTH = process.env.HEADER_AUTH;
 const HEADER_AUTH_VALUE = `Basic ${HEADER_AUTH}`;
 
-exports.initiateCall = async () => {
+exports.initiateCall = async (vendorNumber) => {
   try {
     let data = JSON.stringify({
       callFlowId: CALL_FLOW_ID,
@@ -17,10 +17,10 @@ exports.initiateCall = async () => {
       callFlowConfiguration: {
         initiateCall_1: {
           callerId: CALLER_ID,
-          mergingStrategy: "SEQUENTIAL",
+          mergingStrategy: "MERGE",
           participants: [
             {
-              participantAddress: "8526190332",
+              participantAddress: vendorNumber,
               callerId: CALLER_ID,
               participantName: "Kiruthika",
               maxRetries: 1,
@@ -30,7 +30,8 @@ exports.initiateCall = async () => {
           maxTime: 0,
         },
         addParticipant_1: {
-          mergingStrategy: "SEQUENTIAL",
+          mergingStrategy: "MERGE",
+          // mergingStrategy: "SEQUENTIAL",
           maxTime: 0,
           participants: [
             {
@@ -57,7 +58,8 @@ exports.initiateCall = async () => {
     };
 
     const response = await axios(config);
-    console.log(JSON.stringify(response.data));
+    // console.log(JSON.stringify(response.data));
+    console.log(JSON.stringify(data, null, 2));
     return { success: true, data: response.data };
   } catch (error) {
     console.log(error);

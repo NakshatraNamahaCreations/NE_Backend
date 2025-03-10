@@ -640,6 +640,83 @@ exports.addProductImage = async (req, res) => {
   }
 };
 
+exports.searchProduct = async (req, res) => {
+  try {
+    const query = req.query;
+    const searchQuery = (query.search || "").toLowerCase();
+    const limit = parseInt(query.limit) || 10;
+    const skip = parseInt(query.skip) || 0;
+
+    const category = (query.category || "").toLowerCase();
+    const name = (query.product_name || "").toLowerCase();
+    const brand = (query.brand || "").toLowerCase();
+
+    const filter = {
+      ...(searchQuery && { name: { $regex: searchQuery, $options: "i" } }),
+      ...(category && { product_category: category }),
+      ...(brand && { brand }),
+      ...(name && { product_name: name }),
+    };
+
+    const products = await productSchema.find(filter).skip(skip).limit(limit);
+
+    return res.status(200).json({
+      message: "Products found successfully.",
+      products: products,
+      lenght: products.length,
+    });
+  } catch (error) {
+    console.error("Error in searchProduct API:", error);
+    return res
+      .status(500)
+      .json({ message: "Internal server error.", details: error.message });
+  }
+};
+
+// exports.searchProduct = async (req, res) => {
+//   try {
+//     const query = req.query;
+//     const searchQuery = query.search || "";
+//     const limit = query.limit || 10;
+//     const skip = query.skip || 0;
+//     const sort = query.sort || "name";
+//     const order = query.order || "asc";
+//     const category = query.category || "";
+//     const price = query.price || "";
+//     const rating = query.rating || "";
+//     const brand = query.brand || "";
+//     const minPrice = query.minPrice || "";
+//     const maxPrice = query.maxPrice || "";
+//     const minRating = query.minRating || "";
+//     const maxRating = query.maxRating || "";
+//     const sortBy = query.sortBy || "name";
+//     const orderBy = query.orderBy || "asc";
+//     const filter = {
+//       name: { $regex: searchQuery, $options: "i" },
+//       category: category,
+//       price: { $gte: minPrice, $lte: maxPrice },
+//       rating: { $gte: minRating, $lte: maxRating },
+//       brand: brand,
+//     };
+//     const sortOptions = {
+//       [sortBy]: order === "desc" ? -1 : 1,
+//     };
+//     const products = await productSchema.find(filter)
+//       .sort(sortOptions)
+//       .skip(skip)
+//       .limit(limit);
+//     return res.status(200).json({
+//       message: "Products found successfully.",
+//       products: products,
+//     });
+//   } catch (error) {
+//     console.error("Error in searchProduct API:", error);
+//     return res
+//       .status(500)
+//       .json({ message: "Internal server error.", details: error.message });
+//   }
+// };
+
 // [
 // {orderId: "97738140289314444839",id: "67598de073ce3758dc50907e",productName: "RCF HDL20 Tops",productPrice: 2500,mrpPrice: 2500,store: "Ramdev Electricals Rent",imageUrl:"https://my-s3-image-storage.s3.us-east-1.amazonaws.com/product_files/1733997693945-RCF HDL20 Tops.png",productDimension: "32.6D x 68.8W x 36.8H Centimeters",totalPrice: 5000,quantity: 2,context: "product",sellerName: "Kanna Devan",sellerId: "67062e43e0297d4e91ab505a",eventStartDate: "2024-01-20",eventEndDate: "2024-01-20",commissionTax: 18,commissionPercentage: 20},
 //   {
