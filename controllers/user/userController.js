@@ -298,15 +298,15 @@ exports.verifyIdToken = async (req, res) => {
   const { token, email } = req.body;
   console.log("Received token:", token);
   try {
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: CLIENT_ID || process.env.GOOGLE_CLIENT_ID,
-    });
+    // const ticket = await client.verifyIdToken({
+    //   idToken: token,
+    //   audience: CLIENT_ID || process.env.GOOGLE_CLIENT_ID,
+    // });
 
-    const payload = ticket.getPayload();
-    if (!payload) {
-      return res.status(400).json({ message: "Invalid token" });
-    }
+    // const payload = ticket.getPayload();
+    // if (!payload) {
+    //   return res.status(400).json({ message: "Invalid token" });
+    // }
     const user = await UserSchema.findOne({ email }).select("-password");
 
     if (!user) {

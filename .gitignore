@@ -45,6 +45,8 @@ note.txt
 ticket.html
 user.html
 jspm_packages/
+desktop.ini
+mail.html
 
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
