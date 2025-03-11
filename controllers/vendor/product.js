@@ -643,27 +643,37 @@ exports.addProductImage = async (req, res) => {
 exports.searchProduct = async (req, res) => {
   try {
     const query = req.query;
-    const searchQuery = (query.search || "").toLowerCase();
+    const searchQuery = query.searchQuery
+      ? query.searchQuery.toLowerCase()
+      : "";
     const limit = parseInt(query.limit) || 10;
     const skip = parseInt(query.skip) || 0;
 
-    const category = (query.category || "").toLowerCase();
-    const name = (query.product_name || "").toLowerCase();
-    const brand = (query.brand || "").toLowerCase();
+    const category = query.category ? query.category.toLowerCase() : "";
+    const name = query.name ? query.name.toLowerCase() : "";
+    const brand = query.brand ? query.brand.toLowerCase() : "";
 
-    const filter = {
-      ...(searchQuery && { name: { $regex: searchQuery, $options: "i" } }),
-      ...(category && { product_category: category }),
-      ...(brand && { brand }),
-      ...(name && { product_name: name }),
-    };
+    const filter = {};
+
+    if (searchQuery) {
+      filter.product_name = { $regex: searchQuery, $options: "i" };
+    }
+    if (category) {
+      filter.product_category = category;
+    }
+    if (brand) {
+      filter.brand = brand;
+    }
+    if (name) {
+      filter.product_name = { $regex: name, $options: "i" };
+    }
 
     const products = await productSchema.find(filter).skip(skip).limit(limit);
 
     return res.status(200).json({
       message: "Products found successfully.",
       products: products,
-      lenght: products.length,
+      length: products.length, // Corrected typo
     });
   } catch (error) {
     console.error("Error in searchProduct API:", error);

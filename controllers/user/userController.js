@@ -405,6 +405,37 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
+exports.editProfile = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { username } = req.body;
+
+    // Check if the user exists
+    let findUser = await UserSchema.findById(userId);
+    if (!findUser) {
+      return res.status(404).json({
+        status: 404,
+        error: "User not found",
+      });
+    }
+
+    // Update the user's username
+    let updatedUser = await UserSchema.findByIdAndUpdate(
+      userId,
+      { username: username }, // Ensure to update only the username field
+      { new: true } // To return the updated document
+    );
+
+    res.status(200).json({
+      status: true,
+      success: "Profile updated",
+      data: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Controller for deleting a user
 exports.deleteUser = async (req, res) => {
   try {

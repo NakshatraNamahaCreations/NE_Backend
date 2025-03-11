@@ -17,6 +17,7 @@ const {
   verifyEmailOTP,
   resendEmailOTP,
   resetPassword,
+  editProfile,
 } = require("../../controllers/user/userController");
 // const authMiddleware = require("../../controllers/middleware/authMiddleware");
 const multer = require("multer");
@@ -104,6 +105,7 @@ router.put(
   uploadToS3,
   updateProfile
 );
+router.put("/edit-profile/:id", editProfile);
 router.put("/save-delivery-address/:id", addAddress);
 router.delete("/profile", deleteUser);
 
