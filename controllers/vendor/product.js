@@ -185,9 +185,12 @@ exports.getRelevantProducts = async (req, res) => {
 exports.getFeaturedProducts = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 10;
-
-    if (limit <= 0) {
-      return res.status(400).json({ message: "Invalid limit parameter" });
+    const page = parseInt(req.query.page) || 1;
+    const skip = (page - 1) * limit;
+    if (limit <= 0 || page <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Invalid limit or page parameter" });
     }
 
     const featuredProducts = await productSchema
@@ -196,6 +199,7 @@ exports.getFeaturedProducts = async (req, res) => {
         approval_status: "Approved",
         isFeatured: true,
       })
+      .skip(skip)
       .limit(limit);
 
     if (featuredProducts.length === 0) {

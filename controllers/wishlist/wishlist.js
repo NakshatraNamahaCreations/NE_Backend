@@ -18,11 +18,11 @@ exports.addWishlist = async (req, res) => {
       user_id,
     });
 
-    if (findWishlist) {
-      return res
-        .status(409) // 409 Conflict instead of 400
-        .json({ message: "Product already exists in user's wishlist" });
-    }
+    // if (findWishlist) {
+    //   return res
+    //     .status(409) // 409 Conflict instead of 400
+    //     .json({ message: "Product already exists in user's wishlist" });
+    // }
 
     const wishlist = new wishlistSchema({
       user_id,
@@ -35,7 +35,7 @@ exports.addWishlist = async (req, res) => {
     });
 
     await wishlist.save();
-    res.status(201).json({ message: "Wishlist added successfully", wishlist });
+    res.status(201).json({ message: "Item added to wishlist", wishlist });
   } catch (err) {
     console.error("Error in addWishlist:", err); // Improved error logging
     res
@@ -77,9 +77,10 @@ exports.removeWishlist = async (req, res) => {
       _id: wishlistId,
     });
     if (!wishlist) {
+      console.log("wishlist not found");
       return res.status(404).json({ message: "Wishlist item not found" });
     }
-    return res.status(200).json({ message: "Wishlist removed successfully" });
+    return res.status(200).json({ message: "Item removed from wishlist" });
   } catch (err) {
     console.log("error removing wishlist", err);
     res.status(500).json({ message: "Error removing wishlist", error: err });
