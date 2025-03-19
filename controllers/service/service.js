@@ -1,20 +1,55 @@
 const serviceSchema = require("../../models/service/service");
 
+// exports.addService = async (req, res) => {
+//   try {
+//     const { service_name } = req.body;
+//     const serviceImage = req.body.service_image;
+//     if (serviceImage) {
+//       // const imageBuffer = await sharp(serviceImage).resize({
+//       //   width: 300,
+//       //   height: 300,
+//       //   }).toFormat('jpeg').toBuffer();
+//       //   const image = await cloudinary.uploader.upload(imageBuffer, {
+//       //     upload_preset: 'service',
+//       //     });
+//       //     req.body.service_image = image.secure_url;
+
+//       return res.status(400).json({ error: "File is required" });
+//     }
+//     const service = new serviceSchema({
+//       service_name,
+//       service_image: serviceImage,
+//     });
+//     await service.save();
+//     res.status(200).json({
+//       status: true,
+//       success: "service created successfully",
+//       data: service,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 exports.addService = async (req, res) => {
   try {
     const { service_name } = req.body;
+    const serviceImage = req.body.service_image;
 
-    // if (!req.file) {
-    //   return res.status(400).json({ error: "File is required" });
-    // }
+    if (!serviceImage) {
+      return res.status(400).json({ error: "File is required" });
+    }
+
+    // Fix: Use the model correctly
     const service = new serviceSchema({
       service_name,
-      // service_image: req.file.filename,
+      service_image: serviceImage,
     });
+
     await service.save();
     res.status(200).json({
       status: true,
-      success: "service created successfully",
+      success: "Service created successfully",
       data: service,
     });
   } catch (error) {

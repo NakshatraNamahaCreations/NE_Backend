@@ -64,8 +64,8 @@ const sendUserOrderEmail = async (
 ) => {
   const emailData = {
     sender: {
-      name: "Kadagam Ventures Private Limited",
-      email: "nithyaevents24@gmail.com",
+      name: "Nithyaevent",
+      email: "support@nithyaevents.com",
     },
     to: [{ email: email, name: user_name }],
     subject: "Booking Confirmation - Nithyaevent",

@@ -7,7 +7,8 @@ exports.sendOTP = async (email, otp, username) => {
   const emailData = {
     sender: {
       name: "Nithyaevent",
-      email: "nithyaevents24@gmail.com",
+      email: "support@nithyaevents.com",
+      // email: "nithyaevents24@gmail.com",
     },
     to: [{ email: email, name: username }],
     subject: "Reset Password - OTP",
