@@ -86,7 +86,7 @@ app.use("/api/vendor-inapp", vendorInApp);
 app.use("/api/ivr", ivrCall);
 app.use("/api/wishlist", wishList);
 app.use("/api/enquiry", serviceEnquiry);
-app.use("/api", userPayemt);
+app.use("/api/payment", userPayemt);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

@@ -1,14 +1,20 @@
-const {
-  newPayment,
-  checkStatus,
-} = require("../../controllers/payment/payment");
 const express = require("express");
-const router = express.Router(); // Use Router() instead of express()
+const router = express.Router();
+const {
+  initiatePayment,
+  checkTransactionStatus,
+  // getpaymentstatusByUserId,
+  // getAllPayment,
+  // getPaymentByTransactionId,
+} = require("../../controllers/payment/payment");
 
-// Initiate payment
-router.post("/payment", newPayment);
+router.post("/initiate-payment", initiatePayment);
 
-// Check payment status using the correct parameter name
-router.post("/status/:transactionId", checkStatus);
+router.post(
+  "/status/:merchantId/:merchantTransactionId/:userId",
+  checkTransactionStatus
+);
+// router.get("/paymentstatus/:userId", getpaymentstatusByUserId);
+// router.get("/getpayments", getAllPayment);
 
 module.exports = router;
