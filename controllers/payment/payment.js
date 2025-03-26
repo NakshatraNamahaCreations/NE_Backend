@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const axios = require("axios");
+const sha256 = require("sha256");
 const { v4: uuidv4 } = require("uuid");
 const paymentGatewayModal = require("../../models/payment/Payment");
 
@@ -15,6 +16,7 @@ exports.initiatePayment = async (req, res) => {
         amount: 100,
         redirectUrl: "",
         redirectMode: "POST",
+        // callbackUrl: `http://192.168.1.82:9000/api/payment/status/M22E0HWMLLIYY/${transactionId}`,
         callbackUrl: `https://api.nithyaevent.com/api/payment/status/M22E0HWMLLIYY/${transactionId}`,
         mobileNumber: "8951592630",
         paymentInstrument: {
@@ -22,12 +24,12 @@ exports.initiatePayment = async (req, res) => {
         },
       })
     ).toString("base64");
-    console.log("base64===", base64);
+    // console.log("base64===", base64);
 
     const sha256encode =
       sha256(base64 + "/pg/v1/payecd74096-c2ad-4989-bcca-69a1c9d8deec") +
       "###1";
-    console.log("sha256encode===", sha256encode);
+    // console.log("sha256encode===", sha256encode);
 
     return res.status(200).json({
       success: true,
