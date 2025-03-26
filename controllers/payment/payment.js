@@ -15,7 +15,7 @@ exports.initiatePayment = async (req, res) => {
         amount: 100,
         redirectUrl: "",
         redirectMode: "POST",
-        callbackUrl: `http://192.168.1.82:9000/api/payment/status/M22E0HWMLLIYY/${transactionId}`,
+        callbackUrl: `https://api.nithyaevent.com/api/payment/status/M22E0HWMLLIYY/${transactionId}`,
         mobileNumber: "8951592630",
         paymentInstrument: {
           type: "PAY_PAGE",
