@@ -254,13 +254,13 @@ exports.unblockMember = async (req, res) => {
 };
 
 exports.updateUser = async (req, res) => {
+  const memberId = req.params.id;
   try {
     const {
       member_name,
       mobile_number,
       password,
       email_id,
-      // dashboard_management,
       banner_management,
       profile,
       billing_address,
@@ -289,47 +289,48 @@ exports.updateUser = async (req, res) => {
       tnc,
       youtube_video,
     } = req.body;
-    const memberId = req.params.id;
+    // console.log("Request body:", req.body);
+
     const user = await teamSchema.findOne({ _id: memberId });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    user.member_name = member_name || user.member_name;
-    user.mobile_number = mobile_number || user.mobile_number;
-    user.password = password || user.password;
-    user.email_id = email_id || user.email_id;
-    user.profile = profile || user.profile;
-    user.banner_management = banner_management || user.banner_management;
-    user.service_management = service_management || user.service_management;
-    user.subservice_management =
-      subservice_management || user.subservice_management;
-    user.requirement_management =
-      requirement_management || user.requirement_management;
-    user.userbooking_management =
-      userbooking_management || user.userbooking_management;
-    user.vendororder_management =
-      vendororder_management || user.vendororder_management;
-    user.manage_user = manage_user || user.manage_user;
-    user.manage_vendor = manage_vendor || user.manage_vendor;
-    user.manage_teammemebrs = manage_teammemebrs || user.manage_teammemebrs;
-    user.manage_sellproducts = manage_sellproducts || user.manage_sellproducts;
-    user.manage_rentalproducts =
-      manage_rentalproducts || user.manage_rentalproducts;
-    user.billing_address = billing_address || user.billing_address;
-    user.state = state || user.state;
-    user.city = city || user.city;
-    user.event_report = event_report || user.event_report;
-    user.calculate = calculate || user.calculate;
-    user.cancel_event = cancel_event || user.cancel_event;
-    user.reschedule_event = reschedule_event || user.reschedule_event;
-    user.ticket_raised = ticket_raised || user.ticket_raised;
-    user.pyout_config = pyout_config || user.pyout_config;
-    user.product_payout = product_payout || user.product_payout;
-    user.service_payout = service_payout || user.service_payout;
-    user.tech_payout = tech_payout || user.tech_payout;
-    user.faq = faq || user.faq;
-    user.tnc = tnc || user.tnc;
-    user.youtube_video = youtube_video || user.youtube_video;
+    if (member_name) user.member_name = member_name;
+    if (mobile_number) user.mobile_number = mobile_number;
+    if (password) user.password = password;
+    if (email_id) user.email_id = email_id;
+    if (profile) user.profile = profile || user.profile;
+    if (banner_management) user.banner_management = banner_management;
+    if (service_management) user.service_management = service_management;
+    if (subservice_management)
+      user.subservice_management = subservice_management;
+    if (requirement_management)
+      user.requirement_management = requirement_management;
+    if (userbooking_management)
+      user.userbooking_management = userbooking_management;
+    if (vendororder_management)
+      user.vendororder_management = vendororder_management;
+    if (manage_user) user.manage_user = manage_user;
+    if (manage_vendor) user.manage_vendor = manage_vendor;
+    if (manage_teammemebrs) user.manage_teammemebrs = manage_teammemebrs;
+    if (manage_sellproducts) user.manage_sellproducts = manage_sellproducts;
+    if (manage_rentalproducts)
+      user.manage_rentalproducts = manage_rentalproducts;
+    if (billing_address) user.billing_address = billing_address;
+    if (state) user.state = state;
+    if (city) user.city = city;
+    if (event_report) user.event_report = event_report;
+    if (calculate) user.calculate = calculate;
+    if (cancel_event) user.cancel_event = cancel_event;
+    if (reschedule_event) user.reschedule_event = reschedule_event;
+    if (ticket_raised) user.ticket_raised = ticket_raised;
+    if (pyout_config) user.pyout_config = pyout_config;
+    if (product_payout) user.product_payout = product_payout;
+    if (service_payout) user.service_payout = service_payout;
+    if (tech_payout) user.tech_payout = tech_payout;
+    if (faq) user.faq = faq;
+    if (tnc) user.tnc = tnc;
+    if (youtube_video) user.youtube_video = youtube_video;
 
     let updateUser = await teamSchema.findOneAndUpdate(
       { _id: memberId },

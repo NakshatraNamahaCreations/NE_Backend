@@ -8,15 +8,16 @@ exports.addWishlist = async (req, res) => {
       product_id,
       product_name,
       product_image,
+      Reviews,
       product_price,
       mrp_price,
       discount,
     } = req.body;
 
-    const findWishlist = await wishlistSchema.findOne({
-      product_id,
-      user_id,
-    });
+    // const findWishlist = await wishlistSchema.findOne({
+    //   product_id,
+    //   user_id,
+    // });
 
     // if (findWishlist) {
     //   return res
@@ -29,6 +30,7 @@ exports.addWishlist = async (req, res) => {
       product_id,
       product_name,
       product_image,
+      Reviews,
       product_price,
       mrp_price,
       discount,

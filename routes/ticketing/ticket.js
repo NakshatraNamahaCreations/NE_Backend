@@ -5,6 +5,7 @@ const {
   createTicket,
   getAllTickets,
   getTicketById,
+  getTicketByTicketId,
   changeTicketStatus,
 } = require("../../controllers/ticketing/ticket");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
@@ -75,6 +76,7 @@ router.post(
 );
 router.get("/get-all-tickets", getAllTickets);
 router.get("/get-ticket-by-id/:id", getTicketById);
+router.get("/get-ticket-by-ticket-id/:id", getTicketByTicketId);
 router.put("/change-status/:id", changeTicketStatus);
 
 module.exports = router;

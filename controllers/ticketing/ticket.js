@@ -71,6 +71,20 @@ exports.getTicketById = async (req, res) => {
   }
 };
 
+exports.getTicketByTicketId = async (req, res) => {
+  try {
+    const ticket = await ticketSchema.findOne({ _id: req.params.id });
+    if (!ticket) {
+      return res.status(404).json({ message: "ticket not found" });
+    } else {
+      return res.status(200).json({ data: ticket });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.changeTicketStatus = async (req, res) => {
   try {
     const { ticket_status, remark, update_date } = req.body;

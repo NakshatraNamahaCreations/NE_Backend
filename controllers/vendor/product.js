@@ -199,6 +199,7 @@ exports.getFeaturedProducts = async (req, res) => {
         approval_status: "Approved",
         isFeatured: true,
       })
+      .sort({ _id: -1 })
       .skip(skip)
       .limit(limit);
 
