@@ -14,6 +14,7 @@ exports.addProduct = async (req, res) => {
       product_type,
       product_name,
       product_price,
+      product_video,
       mrp_rate,
       discount,
       brand,
@@ -44,7 +45,7 @@ exports.addProduct = async (req, res) => {
       product_type,
       product_name,
       product_image: req.body.product_image,
-      product_video: req.body.product_video,
+      product_video,
       mrp_rate,
       product_price,
       discount,
@@ -75,7 +76,7 @@ exports.addProduct = async (req, res) => {
 
 exports.getAllProduct = async (req, res) => {
   try {
-    const allProduct = await productSchema.find();
+    const allProduct = await productSchema.find().sort({ _id: -1 });
 
     if (allProduct.length < 0) {
       return res.status(404).json({ message: "products not found" });
@@ -95,10 +96,12 @@ exports.getAllRentalProduct = async (req, res) => {
       return res.status(400).json({ message: "Invalid limit parameter" });
     }
 
-    const allRentalProduct = await productSchema.find({
-      product_type: "rental",
-      approval_status: "Approved",
-    });
+    const allRentalProduct = await productSchema
+      .find({
+        product_type: "rental",
+        approval_status: "Approved",
+      })
+      .sort({ _id: -1 });
     if (allRentalProduct.length < 0) {
       console.log("no products found");
       return res.status(404).json({ message: "products not found" });
@@ -287,16 +290,47 @@ exports.editProduct = async (req, res) => {
   }
 };
 
+exports.blockProductsAvailability = async (req, res) => {
+  try {
+    const { productId, blockedStartDate, blockedEndDate } = req.body;
+
+    if (!productId || !Array.isArray(productId) || productId.length === 0) {
+      return res.status(400).json({ message: "Product ID array is required" });
+    }
+
+    const blockProduct = await productSchema.updateMany(
+      { _id: { $in: productId } },
+      {
+        $set: {
+          available_start_date: blockedStartDate,
+          available_end_date: blockedEndDate,
+        },
+      }
+    );
+    console.log("blockProduct", blockProduct);
+    res.status(200).json({
+      message: "Products blocked successfully",
+      status: true,
+      data: blockProduct,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
 exports.getParticularVendorProduct = async (req, res) => {
   try {
     const vendorId = req.params.id;
 
     // Query the database for all rental products with the vendor ID
-    const allRentalProducts = await productSchema.find({
-      vendor_id: vendorId,
-      product_type: "rental",
-      approval_status: "Approved",
-    });
+    const allRentalProducts = await productSchema
+      .find({
+        vendor_id: vendorId,
+        product_type: "rental",
+        approval_status: "Approved",
+      })
+      .sort({ _id: -1 });
 
     // Check if no products are found
     if (!allRentalProducts || allRentalProducts.length === 0) {
@@ -330,9 +364,11 @@ exports.getProduct = async (req, res) => {
 exports.filteroutVendorProduct = async (req, res) => {
   try {
     let vendorId = req.params.id;
-    let allSellingProduct = await productSchema.find({
-      approval_status: "Approved",
-    });
+    let allSellingProduct = await productSchema
+      .find({
+        approval_status: "Approved",
+      })
+      .sort({ _id: -1 });
     // const vendorProducts  = await productSchema.find({ vendor_id: vendorId });
     let remainingProducts = allSellingProduct.filter(
       (product) => product.vendor_id.toString() !== vendorId
@@ -351,9 +387,30 @@ exports.filteroutVendorProduct = async (req, res) => {
 exports.getVendorProduct = async (req, res) => {
   try {
     let vendorId = req.params.id;
-    let allProductFromVendor = await productSchema.find({
-      vendor_id: vendorId,
-    });
+    let allProductFromVendor = await productSchema
+      .find({
+        vendor_id: vendorId,
+      })
+      .sort({ _id: -1 });
+    if (allProductFromVendor) {
+      return res.status(200).json({ products: allProductFromVendor });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getProductsByVendorIdAndApprovedProducts = async (req, res) => {
+  try {
+    let vendorId = req.params.id;
+    let allProductFromVendor = await productSchema
+      .find({
+        vendor_id: vendorId,
+        approval_status: "Approved",
+        product_type: "rental",
+      })
+      .sort({ _id: -1 });
     if (allProductFromVendor) {
       return res.status(200).json({ products: allProductFromVendor });
     }

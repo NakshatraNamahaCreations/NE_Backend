@@ -30,6 +30,7 @@ const userSchema = new mongoose.Schema({
     minlength: 6,
   },
   saved_address: Array,
+  profile_image: String,
   company_profile: [
     {
       company_type: String,

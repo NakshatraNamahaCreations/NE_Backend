@@ -62,6 +62,8 @@ const userOrderSchema = new mongoose.Schema(
     cancelled_date: String,
     stock_in_hand: Number,
     vendors_message: String,
+    otp: Number,
+
     event_setup: [
       {
         vendor_id: String,

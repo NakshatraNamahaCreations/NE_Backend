@@ -13,6 +13,7 @@ const {
   getCancelledOrder,
   getRescheduledOrder,
   addDeliveryImges,
+  getEventSetupImages,
   deliveryOrder,
   raiseTickets, //update in server
   // initiateCallUserToVendor,
@@ -170,6 +171,8 @@ router.put(
   uploadDeliveryiMAGES,
   addDeliveryImges
 );
+router.get("/get-eventsetup-images-by-vendorid/:id", getEventSetupImages);
+
 router.put("/delivery-order/:id", deliveryOrder);
 // router.post("/initiate-call-from-user-to-vendor", initiateCallUserToVendor);
 module.exports = router;

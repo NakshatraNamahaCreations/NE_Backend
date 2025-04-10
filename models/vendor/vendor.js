@@ -13,6 +13,8 @@ const addressSchema = new mongoose.Schema(
     distric: String,
     state: String,
     pincode: String,
+    latitude: Number,
+    longitude: Number,
     directions: String,
   },
   { _id: true }

@@ -9,6 +9,7 @@ const {
   getAllProduct,
   getAllRentalProduct,
   getFeaturedProducts,
+  getProductsByVendorIdAndApprovedProducts,
   getRelevantProducts,
   getAllSellProduct,
   getProduct,
@@ -17,6 +18,7 @@ const {
   filteroutVendorProduct,
   getVendorProduct,
   getParticularVendorProduct,
+  blockProductsAvailability,
   approveProduct,
   disApproveProduct,
   getAllSellForAdminProduct,
@@ -46,7 +48,7 @@ const upload = multer({
 
 const uploadToS3 = async (req, res, next) => {
   try {
-    if (!req.files || (!req.files.images && !req.files.video)) {
+    if (!req.files || !req.files.images) {
       throw new Error("No files provided");
     }
 
@@ -75,13 +77,13 @@ const uploadToS3 = async (req, res, next) => {
     }
     // console.log("Uploaded files:", uploadedFiles);
     req.body.product_image = uploadedFiles.images || [];
-    req.body.product_video = uploadedFiles.video
-      ? uploadedFiles.video[0]
-      : null;
+    // req.body.product_video = uploadedFiles.video
+    //   ? uploadedFiles.video[0]
+    //   : null;
 
     next();
   } catch (error) {
-    // console.error("Upload error:", error);
+    console.error("Upload error:", error);
     res
       .status(500)
       .json({ error: "File upload failed", details: error.message });
@@ -92,7 +94,7 @@ router.post(
   "/addproduct",
   upload.fields([
     { name: "images", maxCount: 6 },
-    { name: "video", maxCount: 1 },
+    // { name: "video", maxCount: 1 },
   ]),
   uploadToS3,
   // (req, res, next) => {
@@ -105,10 +107,15 @@ router.post(
 router.get("/getallproduct", getAllProduct);
 router.get("/getrentalproduct", getAllRentalProduct);
 router.get("/getfeaturedproducts", getFeaturedProducts);
+router.get(
+  "/get_approved_products/:id",
+  getProductsByVendorIdAndApprovedProducts
+);
 router.get("/getrelevantproducts", getRelevantProducts);
 router.get("/getproduct/:id", getProduct);
 router.get("/getfilteroutproducts/:id", filteroutVendorProduct);
 router.get("/get-particular-vendor-products/:id", getParticularVendorProduct);
+router.post("/update-product-availability", blockProductsAvailability);
 router.get("/getsellproduct", getAllSellProduct);
 router.get("/getvendorproduct/:id", getVendorProduct);
 router.put("/review/:id", writeReview);
@@ -116,7 +123,6 @@ router.get("/getreview/:id", getReview);
 router.put("/product-Status/:id", productStatusChange);
 router.get("/get-rental-product-for-admin", getRentalProductForAdmin);
 router.get("/get-all-sell-product-for-admin", getAllSellForAdminProduct);
-
 router.put("/product-approved/:id", approveProduct);
 router.put("/product-disapproved/:id", disApproveProduct);
 router.delete("/delete-product/:id", deleteProduct);

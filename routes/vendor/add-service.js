@@ -10,6 +10,7 @@ const {
   getSerivceByServiceId,
   getAllApprovedServices,
   getServiceByVendorId,
+  blockServiceAvailability,
   editService,
   writeReviewForService,
   getReviewByServiceId,
@@ -85,6 +86,7 @@ router.get("/get-all-services", getAllSerivceList);
 router.get("/get-service-by-serviceid/:id", getSerivceByServiceId);
 router.get("/get-approved-services", getAllApprovedServices);
 router.get("/get-services-by-vendor-id/:id", getServiceByVendorId);
+router.post("/update-service-availability", blockServiceAvailability);
 router.put("/edit-service/:id", editService);
 router.put("/write-service-review/:id", writeReviewForService);
 router.get("/get-review-by-service-id/:id", getReviewByServiceId);

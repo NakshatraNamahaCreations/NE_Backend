@@ -408,31 +408,36 @@ exports.updateProfile = async (req, res) => {
 exports.editProfile = async (req, res) => {
   try {
     const userId = req.params.id;
-    const { username } = req.body;
+    const { username, profile_image } = req.body;
 
-    // Check if the user exists
-    let findUser = await UserSchema.findById(userId);
+    const findUser = await UserSchema.findById(userId);
     if (!findUser) {
       return res.status(404).json({
-        status: 404,
+        status: false,
         error: "User not found",
       });
     }
 
-    // Update the user's username
-    let updatedUser = await UserSchema.findByIdAndUpdate(
+    const updateFields = {};
+    if (username) updateFields.username = username;
+    if (profile_image) updateFields.profile_image = profile_image;
+
+    const updatedUser = await UserSchema.findByIdAndUpdate(
       userId,
-      { username: username }, // Ensure to update only the username field
-      { new: true } // To return the updated document
+      { $set: updateFields },
+      { new: true }
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       status: true,
       success: "Profile updated",
       data: updatedUser,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      status: false,
+      error: error.message,
+    });
   }
 };
 
@@ -570,7 +575,7 @@ exports.resetPassword = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    console.log("password", newPassword);
+    // console.log("password", newPassword);
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     user.password = hashedPassword;

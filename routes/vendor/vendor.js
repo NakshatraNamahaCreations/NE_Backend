@@ -6,13 +6,14 @@ const router = express.Router();
 const {
   vendorRegister,
   addVendorBusinessDetails,
-  vendorLogin,
+  vendorLoginWithGmail,
   getVendorProfile,
   // updateVendorProfile,
   deleteVendorProfile,
   addAddress,
   getAllVendor,
   loginWithMobile,
+  loginWithGoogle,
   getAllFilteroutVendor,
   // addServiceRequiredFields,
   // addServiceAdditionalDetails,
@@ -30,6 +31,8 @@ const {
   deleteVendor,
   forgotPassword,
   verifyOTP,
+  resetPassword,
+  resendEmailOTP,
 } = require("../../controllers/vendor/vendorController");
 const multer = require("multer");
 const path = require("path");
@@ -171,7 +174,7 @@ router.put(
   addVendorBusinessDetails
 );
 
-router.post("/login", vendorLogin);
+router.post("/login-with-gmail", vendorLoginWithGmail);
 router.put(
   "/add-service-user-business-details/:id",
   upload.fields([{ name: "shop_image_or_logo", maxCount: 1 }]), //vendor profile
@@ -180,6 +183,7 @@ router.put(
 );
 
 router.post("/loginwithmobilenumber", loginWithMobile);
+router.post("/login-with-google-account", loginWithGoogle);
 router.get("/getprofile/:id", getVendorProfile);
 router.get("/getallvendor", getAllVendor);
 router.get("/get-product-vendor", getOnlyProductVendor);
@@ -202,6 +206,8 @@ router.get("/get-all-vendors-for-admin", getAllVendorsForAdmin);
 router.put("/add-commissions/:id", addCommissions);
 router.delete("/delete-vendor/:id", deleteVendor);
 router.post("/forgot-password", forgotPassword);
+router.post("/reset-vendor-password", resetPassword);
+router.post("/resent-otp", resendEmailOTP);
 router.post("/verify-email-otp", verifyOTP);
 
 module.exports = router;

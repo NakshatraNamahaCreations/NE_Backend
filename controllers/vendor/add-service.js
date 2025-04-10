@@ -219,6 +219,35 @@ exports.editService = async (req, res) => {
   }
 };
 
+exports.blockServiceAvailability = async (req, res) => {
+  try {
+    const { serviceId, blockedStartDate, blockedEndDate } = req.body;
+
+    if (!serviceId || !Array.isArray(serviceId) || serviceId.length === 0) {
+      return res.status(400).json({ message: "Service ID array is required" });
+    }
+
+    const availableService = await addServiceSchema.updateMany(
+      { _id: { $in: serviceId } },
+      {
+        $set: {
+          available_start_date: blockedStartDate,
+          available_end_date: blockedEndDate,
+        },
+      }
+    );
+    console.log("availableService", availableService);
+    res.status(200).json({
+      message: "Service blocked successfully",
+      status: true,
+      data: availableService,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
 exports.writeReviewForService = async (req, res) => {
   try {
     const { user_id, user_name, review_title, review_description, ratings } =

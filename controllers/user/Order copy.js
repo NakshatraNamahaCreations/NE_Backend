@@ -201,7 +201,6 @@ exports.userOrder = async (req, res) => {
       location_lat,
       location_long,
       vendors_message,
-      otp: Math.floor(Math.random() * 9000) + 1000,
     });
     await newOrder.save();
     // Notify the vendors about the order
@@ -314,31 +313,34 @@ exports.getSellerProducts = async (req, res) => {
 
     const filteredResponse = allOrders
       .map((order) => {
-        // Filter the products based on sellerId
-        const filteredProducts = order.product_data.filter(
-          (product) => product.sellerId === sellerId
-        );
+        const filteredProducts = order.product_data.filter((product) => {
+          const sellerMatch = product.sellerId === sellerId;
 
-        // Normalize the order_status from frontend and from DB to lowercase
-        const normalizedStatus = order_status?.trim().toLowerCase();
+          // Normalize the order_status from frontend and from DB to lowercase
+          const normalizedStatus = order_status?.trim().toLowerCase();
 
-        // Normalize order_status of the order itself
-        const orderStatus = order?.order_status?.trim().toLowerCase() || ""; // Normalize order status
+          const productStatus =
+            product?.order_status?.trim().toLowerCase() || ""; // Normalize product status
+          const orderStatus = order?.order_status?.trim().toLowerCase() || ""; // Normalize order status
 
-        // Handle filtering logic based on order_status
-        let statusMatch = false;
-        if (!order_status || normalizedStatus === "all") {
-          statusMatch = true; // Show all statuses
-        } else {
-          statusMatch = orderStatus === normalizedStatus;
-        }
+          let statusMatch = false;
 
-        // If filtered products are found and status matches, return the order
-        if (filteredProducts.length > 0 && statusMatch) {
+          if (!order_status || normalizedStatus === "all") {
+            statusMatch = true; // Show all statuses
+          } else if (normalizedStatus === "order delivered") {
+            statusMatch = productStatus === "order delivered";
+          } else {
+            statusMatch = orderStatus === normalizedStatus;
+          }
+
+          return sellerMatch && statusMatch;
+        });
+
+        if (filteredProducts.length > 0) {
           return {
             _id: order._id,
             event_name: order.event_name,
-            order_status: order.order_status, // Include the order status at the root level
+            ...order._doc,
             product_data: filteredProducts,
           };
         }
@@ -346,14 +348,13 @@ exports.getSellerProducts = async (req, res) => {
         return null;
       })
       .filter(Boolean);
-
-    // console.log("filteredResponse", filteredResponse.length); // Log the number of filtered results
+    console.log("filteredResponse", filteredResponse.length);
 
     if (filteredResponse.length === 0) {
       return res.status(404).json({ message: "No data available" });
     }
 
-    return res.status(200).json({ filteredResponse }); // Ensure the response has filteredResponse property
+    return res.status(200).json(filteredResponse);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -406,95 +407,39 @@ exports.getSellerProducts = async (req, res) => {
 exports.getServiceOrders = async (req, res) => {
   try {
     const sellerId = req.params.id;
-    const { order_status } = req.query;
 
-    const allOrders = await UserOrder.find().sort({ _id: -1 });
+    const allOrders = await UserOrder.find();
 
     const filteredResponse = allOrders
       .map((order) => {
-        // Filter the products based on sellerId
         const filteredService = order.service_data.filter(
           (service) => service.sellerId === sellerId
         );
 
-        // Normalize the order_status from frontend and from DB to lowercase
-        const normalizedStatus = order_status?.trim().toLowerCase();
-
-        // Normalize order_status of the order itself
-        const orderStatus = order?.order_status?.trim().toLowerCase() || ""; // Normalize order status
-
-        // Handle filtering logic based on order_status
-        let statusMatch = false;
-        if (!order_status || normalizedStatus === "all") {
-          statusMatch = true; // Show all statuses
-        } else {
-          statusMatch = orderStatus === normalizedStatus;
-        }
-
-        // If filtered products are found and status matches, return the order
-        if (filteredService.length > 0 && statusMatch) {
+        if (filteredService.length > 0) {
           return {
-            _id: order._id,
-            event_name: order.event_name,
-            order_status: order.order_status, // Include the order status at the root level
-            service_data: filteredService,
+            _id: order._id, // Include the order ID
+            event_name: order.event_name, // Include the event name
+            ...order._doc, // Spread all other properties of the order
+            service_data: filteredService, // Include only filtered products
           };
         }
-
-        return null;
+        return null; // Exclude orders without matching products
       })
-      .filter(Boolean);
+      .filter(Boolean); // Remove null values
 
-    // console.log("filteredResponse", filteredResponse.length); // Log the number of filtered results
-
+    // If no products are found, return 404
     if (filteredResponse.length === 0) {
-      return res.status(404).json({ message: "No data available" });
+      return res.status(404).json({ message: "service not found" });
     }
 
-    return res.status(200).json({ filteredResponse }); // Ensure the response has filteredResponse property
+    // Return the filtered response
+    return res.status(200).json(filteredResponse);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
-
-// old api
-// exports.getServiceOrders = async (req, res) => {
-//   try {
-//     const sellerId = req.params.id;
-
-//     const allOrders = await UserOrder.find();
-
-//     const filteredResponse = allOrders
-//       .map((order) => {
-//         const filteredService = order.service_data.filter(
-//           (service) => service.sellerId === sellerId
-//         );
-
-//         if (filteredService.length > 0) {
-//           return {
-//             _id: order._id, // Include the order ID
-//             event_name: order.event_name, // Include the event name
-//             ...order._doc, // Spread all other properties of the order
-//             service_data: filteredService, // Include only filtered products
-//           };
-//         }
-//         return null; // Exclude orders without matching products
-//       })
-//       .filter(Boolean); // Remove null values
-
-//     // If no products are found, return 404
-//     if (filteredResponse.length === 0) {
-//       return res.status(404).json({ message: "service not found" });
-//     }
-
-//     // Return the filtered response
-//     return res.status(200).json(filteredResponse);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
 
 exports.getUserOrderByUserId = async (req, res) => {
   try {
@@ -515,12 +460,10 @@ exports.getOrderByOrderId = async (req, res) => {
   try {
     const orderId = await UserOrder.findOne({
       _id: String(req.params.id),
-    });
+    }).sort({ _id: -1 });
     if (!orderId) {
       return res.status(404).json({ message: "Order not found" });
     }
-    console.log("orderId", orderId);
-
     res.status(200).json({ orderId });
   } catch (error) {
     console.error(error);
@@ -718,37 +661,9 @@ exports.addDeliveryImges = async (req, res) => {
   });
 };
 
-exports.getEventSetupImages = async (req, res) => {
-  try {
-    const findEvent = await UserOrder.findOne({ _id: req.params.id });
-    if (!findEvent) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-
-    const vendorId = req.query.vendor_id;
-    if (!vendorId) {
-      return res.status(400).json({ message: "Vendor ID is required" });
-    }
-
-    const filteredSetupImage = findEvent.event_setup.filter(
-      (item) => item.vendor_id === vendorId
-    );
-
-    return res.status(200).json({
-      status: true,
-      success: "Success",
-      data: filteredSetupImage,
-    });
-  } catch (error) {
-    console.error("Error fetching setup images:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
 exports.deliveryOrder = async (req, res) => {
   try {
-    const { otp, delivered_date, productIds, bookingType } = req.body;
-    console.log("productIds", productIds);
+    const { otp, delivered_date, productIds } = req.body;
 
     const order = await UserOrder.findOne({ _id: req.params.id });
     if (!order) {
@@ -758,11 +673,8 @@ exports.deliveryOrder = async (req, res) => {
     if (order.otp !== otp) {
       return res.status(400).json({ message: "OTP is incorrect" });
     }
-    const findBookingType =
-      bookingType === "Product" ? order.product_data : order.service_data;
-    console.log("findBookingType", bookingType);
 
-    const newProductData = findBookingType.map((product) => {
+    const newProductData = order.product_data.map((product) => {
       if (productIds.includes(product.id)) {
         return {
           ...product,
@@ -773,15 +685,12 @@ exports.deliveryOrder = async (req, res) => {
       return product;
     });
 
-    const updateField =
-      bookingType === "Product"
-        ? { product_data: newProductData }
-        : { service_data: newProductData };
-
     const updateStatus = await UserOrder.updateOne(
       { _id: req.params.id },
       {
-        $set: updateField,
+        $set: {
+          product_data: newProductData,
+        },
       }
     );
 
