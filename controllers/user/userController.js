@@ -405,6 +405,47 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
+// exports.editProfile = async (req, res) => {
+//   try {
+//     const userId = req.params.id;
+//     const { username } = req.body;
+
+//     const findUser = await UserSchema.findById(userId);
+//     if (!findUser) {
+//       return res.status(404).json({
+//         status: false,
+//         error: "User not found",
+//       });
+//     }
+
+//     const updateFields = {};
+//     if (username) updateFields.username = username;
+//     if (req.file) {
+//       updateFields.profile_image = req.file.path;
+//     }
+
+//     const updatedUser = await UserSchema.findByIdAndUpdate(
+//       userId,
+//       { $set: updateFields },
+//       { new: true }
+//     );
+//     console.log("updatedUser", updatedUser);
+
+//     return res.status(200).json({
+//       status: true,
+//       success: "Profile updated",
+//       data: updatedUser,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       status: false,
+//       error: error.message,
+//     });
+//   }
+// };
+
+// Controller for deleting a user
+
 exports.editProfile = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -427,6 +468,7 @@ exports.editProfile = async (req, res) => {
       { $set: updateFields },
       { new: true }
     );
+    console.log("updatedUser", updatedUser);
 
     return res.status(200).json({
       status: true,
@@ -441,7 +483,6 @@ exports.editProfile = async (req, res) => {
   }
 };
 
-// Controller for deleting a user
 exports.deleteUser = async (req, res) => {
   try {
     await User.findByIdAndDelete(req.user.id);

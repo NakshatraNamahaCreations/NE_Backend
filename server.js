@@ -54,7 +54,7 @@ const { default: axios } = require("axios");
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(cors());
-app.use(bodyParser.json({ limit: "50mb" })); // support json encoded bodies
+app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use("/public", express.static("public"));
 

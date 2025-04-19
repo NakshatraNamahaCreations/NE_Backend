@@ -20,6 +20,7 @@ exports.vendorRegister = async (req, res) => {
       account_number,
       ifsc_code,
       bank_branch_name,
+      profession_type,
     } = req.body;
 
     const existingMobileNumber = await vendorSchema.findOne({ mobile_number });
@@ -51,6 +52,7 @@ exports.vendorRegister = async (req, res) => {
       is_approved: false,
       commission_percentage: 22,
       commission_tax: 18,
+      profession_type,
     });
 
     await newVendor.save();
@@ -98,6 +100,8 @@ exports.addVendorBusinessDetails = async (req, res) => {
         vehicle_by: vehicle_by,
         shop_image_or_logo: req.body.shop_image_or_logo,
         vehicle_image: req.body.vehicle_image,
+        aadhaar_front: req.body.aadhaar_front,
+        aadhaar_back: req.body.aadhaar_back,
       },
       { new: true }
     );
@@ -150,6 +154,8 @@ exports.addServiceUserBusinessDetails = async (req, res) => {
         // business_hours: parsedBusinessHours,
         experience_in_business: experience_in_business,
         shop_image_or_logo: req.body.shop_image_or_logo,
+        aadhaar_front: req.body.aadhaar_front,
+        aadhaar_back: req.body.aadhaar_back,
         // commission_percentage: 22,
         // commission_tax: 18,
       },
@@ -524,6 +530,26 @@ exports.getOnlyProductVendor = async (req, res) => {
     if (productVendor.length > 0) {
       return res.status(200).json({ data: productVendor });
     } else {
+      return res.status(404).json({ message: "No vendor found" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getOnlyServiceVendor = async (req, res) => {
+  try {
+    const serviceVendor = await vendorSchema
+      .find({
+        profession: { $ne: "Vendor & Seller" },
+        is_approved: true,
+      })
+      .sort({ _id: -1 });
+    if (serviceVendor.length > 0) {
+      return res.status(200).json({ data: serviceVendor });
+    } else {
+      console.log("no service vendors found");
       return res.status(404).json({ message: "No vendor found" });
     }
   } catch (error) {

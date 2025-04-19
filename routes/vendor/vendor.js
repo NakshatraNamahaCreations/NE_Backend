@@ -18,6 +18,7 @@ const {
   // addServiceRequiredFields,
   // addServiceAdditionalDetails,
   getOnlyProductVendor,
+  getOnlyServiceVendor,
   getVendorByServiceName,
   addServiceUserBusinessDetails,
   addAdditionalServices,
@@ -101,16 +102,21 @@ const uploadToS3 = async (req, res, next) => {
         })
       );
     }
-    // console.log("Uploaded files:", uploadedFiles);
 
-    // Assign the uploaded URLs to req.body fields
     req.body.shop_image_or_logo = uploadedFiles.shop_image_or_logo
-      ? uploadedFiles.shop_image_or_logo[0] // Only one file expected
+      ? uploadedFiles.shop_image_or_logo[0]
       : null;
     req.body.vehicle_image = uploadedFiles.vehicle_image
-      ? uploadedFiles.vehicle_image[0] // Only one file expected
+      ? uploadedFiles.vehicle_image[0]
       : null;
 
+    req.body.aadhaar_front = uploadedFiles.aadhaar_front
+      ? uploadedFiles.aadhaar_front[0]
+      : null;
+
+    req.body.aadhaar_back = uploadedFiles.aadhaar_back
+      ? uploadedFiles.aadhaar_back[0]
+      : null;
     next();
   } catch (error) {
     console.error("Upload error:", error);
@@ -168,6 +174,8 @@ router.put(
   "/add-vendor-business-details/:id",
   upload.fields([
     { name: "shop_image_or_logo", maxCount: 1 },
+    { name: "aadhaar_front", maxCount: 1 },
+    { name: "aadhaar_back", maxCount: 1 },
     { name: "vehicle_image", maxCount: 1 }, //vendor profile
   ]),
   uploadToS3,
@@ -177,7 +185,11 @@ router.put(
 router.post("/login-with-gmail", vendorLoginWithGmail);
 router.put(
   "/add-service-user-business-details/:id",
-  upload.fields([{ name: "shop_image_or_logo", maxCount: 1 }]), //vendor profile
+  upload.fields([
+    { name: "shop_image_or_logo", maxCount: 1 },
+    { name: "aadhaar_front", maxCount: 1 },
+    { name: "aadhaar_back", maxCount: 1 },
+  ]), //vendor profile
   uploadToS3,
   addServiceUserBusinessDetails
 );
@@ -187,6 +199,8 @@ router.post("/login-with-google-account", loginWithGoogle);
 router.get("/getprofile/:id", getVendorProfile);
 router.get("/getallvendor", getAllVendor);
 router.get("/get-product-vendor", getOnlyProductVendor);
+router.get("/get-service-vendor", getOnlyServiceVendor);
+
 router.get("/filterout-vendors/:id", getAllFilteroutVendor);
 router.get("/get-vendor-by-servicename/:name", getVendorByServiceName);
 router.delete("/delete-vendor-profile", deleteVendorProfile);

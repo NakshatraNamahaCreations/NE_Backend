@@ -123,6 +123,10 @@ exports.userOrder = async (req, res) => {
       receiver_mobilenumber,
       receiver_name,
       venue_name,
+      // setup_start_date,
+      // setup_end_date,
+      setup_date,
+      rehearsal_date,
       setup_start_time,
       setup_end_time,
       event_start_time,
@@ -174,6 +178,10 @@ exports.userOrder = async (req, res) => {
       venue_name,
       setup_start_time,
       setup_end_time,
+      // setup_start_date,
+      // setup_end_date,
+      setup_date,
+      rehearsal_date,
       event_start_time,
       event_end_time,
       event_location,
@@ -306,6 +314,7 @@ exports.getAllOrder = async (req, res) => {
 // };
 
 exports.getSellerProducts = async (req, res) => {
+  // this api for to show the count of vendor's orders (Products registered vendor)
   try {
     const sellerId = req.params.id;
     const { order_status } = req.query;
@@ -404,6 +413,7 @@ exports.getSellerProducts = async (req, res) => {
 // };
 
 exports.getServiceOrders = async (req, res) => {
+  // this api for to show the count of vendor's orders (service registered vendor)
   try {
     const sellerId = req.params.id;
     const { order_status } = req.query;
