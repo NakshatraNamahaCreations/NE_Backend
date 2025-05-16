@@ -48,6 +48,7 @@ const ivrCall = require("./routes/airtel_ivr/call_process");
 const wishList = require("./routes/wishlist/wishlist");
 const serviceEnquiry = require("./routes/vendor/service-enquiry");
 const userPayemt = require("./routes/payment/payment");
+const addOnsForService = require("./routes/vendor/addons");
 
 const { default: axios } = require("axios");
 // Middleware
@@ -87,6 +88,7 @@ app.use("/api/ivr", ivrCall);
 app.use("/api/wishlist", wishList);
 app.use("/api/enquiry", serviceEnquiry);
 app.use("/api/payment", userPayemt);
+app.use("/api/addons", addOnsForService);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

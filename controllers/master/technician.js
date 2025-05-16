@@ -25,7 +25,7 @@ exports.addTechnician = async (req, res) => {
     });
 
     await newData.save();
-
+    console.log("tech added");
     res.status(200).json({
       status: true,
       success: "Added",
@@ -41,7 +41,7 @@ exports.addTechnician = async (req, res) => {
 
 exports.getAllTech = async (req, res) => {
   try {
-    const tech = await technicianShcema.find();
+    const tech = await technicianShcema.find().sort({ _id: -1 });
     if (!tech) {
       return res.status(404).json({ message: "tech not found" });
     } else {

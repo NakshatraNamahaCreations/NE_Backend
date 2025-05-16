@@ -154,6 +154,7 @@ exports.userOrder = async (req, res) => {
       location_lat,
       location_long,
       vendors_message,
+      booking_from,
     } = req.body;
 
     const SMS_TYPE = "delivery_template";
@@ -209,6 +210,7 @@ exports.userOrder = async (req, res) => {
       location_lat,
       location_long,
       vendors_message,
+      booking_from,
       otp: Math.floor(Math.random() * 9000) + 1000,
     });
     await newOrder.save();

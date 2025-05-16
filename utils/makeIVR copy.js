@@ -15,20 +15,32 @@ exports.initiateCall = async (vendorNumber) => {
       customerId: CUSTOMER_ID,
       callType: "OUTBOUND",
       callFlowConfiguration: {
-        client_add_participant: {
+        initiateCall_1: {
+          callerId: CALLER_ID,
+          mergingStrategy: "MERGE",
           participants: [
             {
-              participantName: "Vendor",
-              participantAddress: "8973267337",
+              participantAddress: vendorNumber,
               callerId: CALLER_ID,
+              participantName: "Kiruthika",
               maxRetries: 1,
-              audioId: 0,
               maxTime: 0,
-              enableEarlyMedia: "false",
             },
           ],
-          mergingStrategy: "SEQUENTIAL",
           maxTime: 0,
+        },
+        addParticipant_1: {
+          mergingStrategy: "MERGE",
+          maxTime: 0,
+          participants: [
+            {
+              participantAddress: "9943740866",
+              participantName: "suman",
+              maxRetries: 1,
+              maxTime: 0,
+              enableEarlyMedia: true,
+            },
+          ],
         },
       },
     });
@@ -45,13 +57,14 @@ exports.initiateCall = async (vendorNumber) => {
     };
 
     const response = await axios(config);
+    // console.log(JSON.stringify(response.data));
+    console.log(JSON.stringify(data, null, 2));
     return { success: true, data: response.data };
   } catch (error) {
-    console.log("Error details:", {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-    });
-    return { success: false, data: error.response?.data || error.message };
+    console.log(error);
+    console.log(
+      "Error on Initiating call:",
+      error.response ? error.response.data : error.errorMessage
+    );
   }
 };

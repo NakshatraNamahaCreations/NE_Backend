@@ -48,9 +48,12 @@ const upload = multer({
 
 const uploadToS3 = async (req, res, next) => {
   try {
-    if (!req.files || !req.files.images) {
+    if (!req.files || (!req.files.images && !req.files.video)) {
       throw new Error("No files provided");
     }
+    // if (!req.files || !req.files.images) {
+    //   throw new Error("No files provided");
+    // }
 
     // console.log("req.files:", req.files);
 
@@ -77,9 +80,9 @@ const uploadToS3 = async (req, res, next) => {
     }
     // console.log("Uploaded files:", uploadedFiles);
     req.body.product_image = uploadedFiles.images || [];
-    // req.body.product_video = uploadedFiles.video
-    //   ? uploadedFiles.video[0]
-    //   : null;
+    req.body.product_video = uploadedFiles.video
+      ? uploadedFiles.video[0]
+      : null;
 
     next();
   } catch (error) {
@@ -94,7 +97,7 @@ router.post(
   "/addproduct",
   upload.fields([
     { name: "images", maxCount: 6 },
-    // { name: "video", maxCount: 1 },
+    { name: "video", maxCount: 1 },
   ]),
   uploadToS3,
   // (req, res, next) => {
