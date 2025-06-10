@@ -29,6 +29,7 @@ const {
   vendorStatus,
   getAllVendorsForAdmin,
   addCommissions,
+  editBankDetails,
   deleteVendor,
   forgotPassword,
   verifyOTP,
@@ -218,6 +219,7 @@ router.put("/vendor-Status/:id", vendorStatus);
 router.put("/vendor-disapprove/:id", vendorDisapprove);
 router.get("/get-all-vendors-for-admin", getAllVendorsForAdmin);
 router.put("/add-commissions/:id", addCommissions);
+router.put("/edit-bank-details/:id", editBankDetails);
 router.delete("/delete-vendor/:id", deleteVendor);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-vendor-password", resetPassword);

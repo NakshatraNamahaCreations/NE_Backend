@@ -93,11 +93,11 @@ exports.getAllSerivceList = async (req, res) => {
 
 exports.getAllApprovedServices = async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 10;
+    // const limit = parseInt(req.query.limit) || 10;
 
-    if (limit <= 0) {
-      return res.status(400).json({ message: "Invalid limit parameter" });
-    }
+    // if (limit <= 0) {
+    //   return res.status(400).json({ message: "Invalid limit parameter" });
+    // }
 
     const allServices = await addServiceSchema
       .find({
@@ -108,7 +108,7 @@ exports.getAllApprovedServices = async (req, res) => {
       console.log("no services found");
       return res.status(404).json({ message: "Services not found" });
     }
-    res.status(200).json({ data: allServices });
+    return res.status(200).json({ data: allServices });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -116,6 +116,26 @@ exports.getAllApprovedServices = async (req, res) => {
 };
 
 exports.getServiceByVendorId = async (req, res) => {
+  try {
+    const vendorServices = await addServiceSchema
+      .find({
+        vendor_id: req.params.id,
+        approval_status: "Approved",
+      })
+      .sort({ _id: -1 });
+
+    if (!vendorServices || vendorServices.length === 0) {
+      console.log("No Service found");
+      return res.status(404).json({ message: "Service not found" });
+    }
+    res.status(200).json({ service: vendorServices });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getVendorService = async (req, res) => {
   try {
     const vendorServices = await addServiceSchema
       .find({
@@ -317,7 +337,7 @@ exports.approveServices = async (req, res) => {
     });
     res.status(200).json({
       message: "Services approved successfully",
-      approval_status: findProduct.approval_status,
+      approval_status: findServices.approval_status,
     });
   } catch (error) {
     console.error(error);

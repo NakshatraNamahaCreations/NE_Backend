@@ -837,6 +837,47 @@ exports.addCommissions = async (req, res) => {
   }
 };
 
+exports.editBankDetails = async (req, res) => {
+  try {
+    const {
+      bank_name,
+      account_holder_name,
+      account_number,
+      ifsc_code,
+      bank_branch_name,
+    } = req.body;
+    let vendorId = req.params.id;
+    let findVendor = await vendorSchema.findOne({ _id: vendorId });
+    if (!findVendor) {
+      console.log("vendor not found");
+      return res.status(404).json({ message: "vendor not found" });
+    }
+
+    findVendor.bank_name = bank_name || findVendor.bank_name;
+    findVendor.account_holder_name =
+      account_holder_name || findVendor.account_holder_name;
+
+    findVendor.account_number = account_number || findVendor.account_number;
+    findVendor.ifsc_code = ifsc_code || findVendor.ifsc_code;
+    findVendor.bank_branch_name =
+      bank_branch_name || findVendor.bank_branch_name;
+
+    const newUpdate = await vendorSchema.findOneAndUpdate(
+      { _id: vendorId },
+      findVendor,
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Details Edited",
+      data: newUpdate,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.deleteVendor = async (req, res) => {
   try {
     const deletedVendor = await vendorSchema.findOneAndDelete({

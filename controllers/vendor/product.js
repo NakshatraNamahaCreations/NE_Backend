@@ -595,7 +595,7 @@ exports.disApproveProduct = async (req, res) => {
       return res.status(404).json({ message: "product not found" });
     }
     findProduct.approval_status = "Disapproved";
-    findProduct.isActive = "Disapproved";
+    findProduct.isActive = false;
     findProduct.reason_for_disapprove = reason_for_disapprove;
     await findProduct.save();
     await notificationSchema.create({
