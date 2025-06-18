@@ -173,65 +173,45 @@ exports.getSerivceByServiceId = async (req, res) => {
 
 exports.editService = async (req, res) => {
   try {
-    const productId = req.params.id;
-    const fintProduct = await addServiceSchema.findOne({ _id: productId });
-    if (!fintProduct) {
-      return res.status(404).json({ message: "Product not found" });
+    const serviceId = req.params.id;
+    const fintService = await addServiceSchema.findOne({ _id: serviceId });
+
+    if (!fintService) {
+      return res.status(404).json({ message: "Service not found" });
     }
-    const {
-      product_category,
-      product_name,
-      product_price,
-      mrp_rate,
-      discount,
-      brand,
-      stock_in_hand,
-      model_name,
-      material_type,
-      product_dimension,
-      product_weight,
-      country_of_orgin,
-      warranty,
-      manufacturer_name,
-      product_color,
-    } = req.body;
 
-    fintProduct.product_category =
-      product_category || fintProduct.product_category;
-    fintProduct.product_name = product_name || fintProduct.product_name;
-    fintProduct.product_price = product_price || fintProduct.product_price;
-    fintProduct.mrp_rate = mrp_rate || fintProduct.mrp_rate;
-    fintProduct.discount = discount || fintProduct.discount;
-    fintProduct.brand = brand || fintProduct.brand;
-    fintProduct.stock_in_hand = stock_in_hand || fintProduct.stock_in_hand;
-    fintProduct.model_name = model_name || fintProduct.model_name;
-    fintProduct.material_type = material_type || fintProduct.material_type;
-    fintProduct.product_dimension =
-      product_dimension || fintProduct.product_dimension;
-    fintProduct.product_weight = product_weight || fintProduct.product_weight;
-    fintProduct.country_of_orgin =
-      country_of_orgin || fintProduct.country_of_orgin;
-    fintProduct.warranty = warranty || fintProduct.warranty;
-    fintProduct.manufacturer_name =
-      manufacturer_name || fintProduct.manufacturer_name;
-    fintProduct.product_color = product_color || fintProduct.product_color;
-    fintProduct.product_image =
-      req.body.product_image || fintProduct.product_image;
-    fintProduct.product_video =
-      req.body.product_video || fintProduct.product_video;
-    fintProduct.approval_status = "Under Review";
+    const { service_name, price, service_description, service_subcategory } =
+      req.body;
+    const existingImages = req.body.existing_images
+      ? JSON.parse(req.body.existing_images)
+      : [];
 
-    let updateProduct = await addServiceSchema.findOneAndUpdate(
-      { _id: productId },
-      fintProduct,
-      {
-        new: true,
-      }
+    const finalImageArray = [
+      ...(existingImages || []),
+      ...(req.body.additional_images || []),
+    ];
+
+    const updatedData = {
+      service_name: service_name || fintService.service_name,
+      price: price || fintService.price,
+      service_description:
+        service_description || fintService.service_description,
+      service_subcategory:
+        service_subcategory || fintService.service_subcategory,
+      approval_status: "Under Review",
+      additional_images: finalImageArray,
+    };
+
+    const updateService = await addServiceSchema.findByIdAndUpdate(
+      serviceId,
+      { $set: updatedData },
+      { new: true }
     );
+
     res.status(200).json({
-      message: "Product updated successfully",
+      message: "Service updated successfully",
       status: true,
-      data: updateProduct,
+      data: updateService,
     });
   } catch (error) {
     console.error(error);
@@ -329,8 +309,8 @@ exports.approveServices = async (req, res) => {
     await notificationSchema.create({
       vendor_id: findServices.vendor_id, // Assuming the Services has a vendor_id field
       Services_id: servicesId,
-      notification_type: "Services_approval",
-      message: `Your Services "${findServices.Services_name}" has been approved.`,
+      notification_type: "services_approval",
+      message: `Your Services "${findServices.service_name}" has been approved.`,
       status: "unread",
       metadata: {}, // Add additional metadata if needed
       created_at: new Date(),
@@ -362,7 +342,7 @@ exports.disApproveService = async (req, res) => {
       vendor_id: findService.vendor_id, // Assuming the product has a vendor_id field
       product_id: serviceId,
       notification_type: "service_approval",
-      message: `Your service "${findService.product_name}" has been disapproved.`,
+      message: `Your service "${findService.service_name}" has been disapproved.`,
       status: "unread",
       metadata: {}, // Add additional metadata if needed
       created_at: new Date(),

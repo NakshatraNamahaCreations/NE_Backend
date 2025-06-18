@@ -12,7 +12,9 @@ exports.getVendorNotificationByVendorId = async (req, res) => {
     // Query notifications for the given vendor ID, sorted by creation date
     const notifications = await notificationSchema
       .find({ vendor_id: vendorId })
-      .sort({ created_at: -1 });
+      .sort({
+        createdAt: -1,
+      });
 
     // Return the notifications
     res.json(notifications);
