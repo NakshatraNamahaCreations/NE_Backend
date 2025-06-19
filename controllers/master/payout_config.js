@@ -62,10 +62,10 @@ exports.getPayoutConfig = async (req, res) => {
     if (!profile) {
       return res.status(404).json({ message: "profile not found" });
     } else {
-      res.status(200).json({ profile });
+      return res.status(200).json({ data: profile });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };

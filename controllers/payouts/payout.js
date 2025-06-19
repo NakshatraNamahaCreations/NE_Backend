@@ -141,7 +141,7 @@ exports.getPayoutAmountsByVendorID = async (req, res) => {
   try {
     const payout = await payoutSchema.find({ seller_id: req.params.id });
     if (payout.length === 0) {
-      console.log("payout not found");
+      // console.log("payout not found");
       return res.status(404).json({ message: "Payout not found" });
     }
     const totalPayout = payout
@@ -161,7 +161,7 @@ exports.changeTicketStatus = async (req, res) => {
     let ticketId = req.params.id;
     let findTicket = await payoutSchema.findOne({ _id: ticketId });
     if (!findTicket) {
-      console.log("ticket not found");
+      // console.log("ticket not found");
       return res.status(404).json({ message: "ticket not found" });
     }
     findTicket.ticket_status = ticket_status;

@@ -351,6 +351,8 @@ exports.getSellerProducts = async (req, res) => {
             event_name: order.event_name,
             order_status: order.order_status, // Include the order status at the root level
             product_data: filteredProducts,
+            eventStartDate: order.event_start_date,
+            eventEndDate: order.event_end_date,
           };
         }
 
@@ -450,6 +452,8 @@ exports.getServiceOrders = async (req, res) => {
             event_name: order.event_name,
             order_status: order.order_status, // Include the order status at the root level
             service_data: filteredService,
+            eventStartDate: order.event_start_date,
+            eventEndDate: order.event_end_date,
           };
         }
 
