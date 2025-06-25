@@ -225,12 +225,12 @@ exports.loginWithMobileNumber = async (req, res) => {
     // const otpMessage = `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
     const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
 
-    const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
-    console.log("smsResponse", smsResponse);
+    // const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
+    // console.log("smsResponse", smsResponse);
 
-    if (!smsResponse.success) {
-      return res.status(500).json({ message: "Failed to send OTP" });
-    }
+    // if (!smsResponse.success) {
+    //   return res.status(500).json({ message: "Failed to send OTP" });
+    // }
 
     res.status(200).json({
       message: "Login successful. OTP sent to your mobile number.",

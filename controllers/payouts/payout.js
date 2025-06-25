@@ -111,7 +111,7 @@ exports.confirmPayoutProcessed = async (req, res) => {
 
 exports.getAllPayouts = async (req, res) => {
   try {
-    const payout = await payoutSchema.find();
+    const payout = await payoutSchema.find().sort({ _id: -1 });
     if (payout.length === 0) {
       return res.status(404).json({ message: "payout list not found" });
     } else {
@@ -125,11 +125,25 @@ exports.getAllPayouts = async (req, res) => {
 
 exports.getPayoutsByIds = async (req, res) => {
   try {
-    const payout = await payoutSchema.find({ seller_id: req.params.id });
+    const payout = await payoutSchema
+      .find({ seller_id: req.params.id })
+      .sort({ _id: -1 });
     if (!payout) {
       return res.status(404).json({ message: "payout not found" });
     } else {
-      return res.status(200).json({ data: payout });
+      const processedAmount = payout
+        .filter((item) => item.payout_status === "Processed")
+        .reduce((acc, curr) => acc + curr.payout_amount, 0);
+
+      const initiatedAmount = payout
+        .filter((item) => item.payout_status === "Initialized")
+        .reduce((acc, curr) => acc + curr.payout_amount, 0);
+
+      return res.status(200).json({
+        data: payout,
+        processedAmount: processedAmount,
+        initiatedAmount: initiatedAmount,
+      });
     }
   } catch (error) {
     console.error(error);

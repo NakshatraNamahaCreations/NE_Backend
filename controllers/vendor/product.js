@@ -207,6 +207,7 @@ exports.getFeaturedProducts = async (req, res) => {
       .limit(limit);
 
     if (featuredProducts.length === 0) {
+      console.log("No featured products found");
       return res.status(404).json({ message: "No featured products found" });
     }
 
