@@ -47,6 +47,8 @@ user.html
 jspm_packages/
 desktop.ini
 mail.html
+payment 21JUn.js
+payment copy.js
 
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/

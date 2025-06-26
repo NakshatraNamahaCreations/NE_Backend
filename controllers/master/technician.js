@@ -2,8 +2,15 @@ const technicianShcema = require("../../models/master/technician");
 
 exports.addTechnician = async (req, res) => {
   try {
-    const { price, category, service_name, vendor_id, vendor_name, shop_name } =
-      req.body;
+    const {
+      price,
+      category,
+      service_name,
+      vendor_id,
+      vendor_name,
+      shop_name,
+      tech_name,
+    } = req.body;
 
     // const bannerImage = req.body.banner_image;
 
@@ -22,6 +29,7 @@ exports.addTechnician = async (req, res) => {
       vendor_id: vendor_id,
       vendor_name: vendor_name,
       shop_name: shop_name,
+      tech_name: tech_name,
     });
 
     await newData.save();
@@ -46,6 +54,24 @@ exports.getAllTech = async (req, res) => {
       return res.status(404).json({ message: "tech not found" });
     } else {
       res.status(200).json({ tech });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getTechByVendorId = async (req, res) => {
+  try {
+    const tech = await technicianShcema
+      .find({
+        vendor_id: req.params.id,
+      })
+      .sort({ _id: -1 });
+    if (!tech) {
+      return res.status(404).json({ message: "tech not found" });
+    } else {
+      return res.status(200).json({ tech });
     }
   } catch (error) {
     console.error(error);

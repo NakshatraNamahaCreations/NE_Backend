@@ -8,6 +8,7 @@ const Technician = new mongoose.Schema({
   vendor_id: String,
   vendor_name: String,
   shop_name: String,
+  tech_name: String,
 });
 const Technicians = mongoose.model("Technician", Technician);
 

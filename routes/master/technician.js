@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   addTechnician,
   getAllTech,
+  getTechByVendorId,
   deleteTechnician,
 } = require("../../controllers/master/technician");
 // const path = require("path");
@@ -77,6 +78,8 @@ router.post(
   addTechnician
 );
 router.get("/get-all-technician", getAllTech);
+router.get("/get-technician-by-vendor-id/:id", getTechByVendorId);
+
 router.delete("/delete_technician/:id", deleteTechnician);
 
 module.exports = router;
