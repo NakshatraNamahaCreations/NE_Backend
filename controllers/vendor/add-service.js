@@ -231,8 +231,8 @@ exports.blockServiceAvailability = async (req, res) => {
       { _id: { $in: serviceId } },
       {
         $set: {
-          available_start_date: blockedStartDate,
-          available_end_date: blockedEndDate,
+          block_start_date: blockedStartDate,
+          block_end_date: blockedEndDate,
         },
       }
     );

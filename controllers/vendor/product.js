@@ -267,10 +267,12 @@ exports.editProduct = async (req, res) => {
     fintProduct.manufacturer_name =
       manufacturer_name || fintProduct.manufacturer_name;
     fintProduct.product_color = product_color || fintProduct.product_color;
+
     fintProduct.product_image =
       req.body.product_image || fintProduct.product_image;
     fintProduct.product_video =
       req.body.product_video || fintProduct.product_video;
+
     fintProduct.approval_status = "Under Review";
 
     let updateProduct = await productSchema.findOneAndUpdate(
@@ -280,6 +282,7 @@ exports.editProduct = async (req, res) => {
         new: true,
       }
     );
+    console.log("updateProduct", updateProduct);
     res.status(200).json({
       message: "Product updated successfully",
       status: true,
@@ -303,8 +306,8 @@ exports.blockProductsAvailability = async (req, res) => {
       { _id: { $in: productId } },
       {
         $set: {
-          available_start_date: blockedStartDate,
-          available_end_date: blockedEndDate,
+          block_start_date: blockedStartDate,
+          block_end_date: blockedEndDate,
         },
       }
     );

@@ -46,16 +46,58 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
-const uploadToS3 = async (req, res, next) => {
-  try {
-    if (!req.files || (!req.files.images && !req.files.video)) {
-      throw new Error("No files provided");
-    }
-    // if (!req.files || !req.files.images) {
-    //   throw new Error("No files provided");
-    // }
+// const uploadToS3 = async (req, res, next) => {
+//   try {
+//     if (!req.files || (!req.files.images && !req.files.video)) {
+//       throw new Error("No files provided");
+//     }
+//     // if (!req.files || !req.files.images) {
+//     //   throw new Error("No files provided");
+//     // }
 
-    // console.log("req.files:", req.files);
+//     // console.log("req.files:", req.files);
+
+//     const uploadedFiles = {};
+//     for (const [key, files] of Object.entries(req.files)) {
+//       uploadedFiles[key] = await Promise.all(
+//         files.map(async (file) => {
+//           const uploadParams = {
+//             Bucket: process.env.AWS_S3_BUCKET_NAME,
+//             Key: `product_files/${Date.now()}-${file.originalname}`,
+//             Body: file.buffer,
+//             ContentType: file.mimetype,
+//           };
+
+//           const uploader = new Upload({
+//             client: s3,
+//             params: uploadParams,
+//           });
+
+//           const uploadResult = await uploader.done();
+//           return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+//         })
+//       );
+//     }
+//     // console.log("Uploaded files:", uploadedFiles);
+//     req.body.product_image = uploadedFiles.images || [];
+//     req.body.product_video = uploadedFiles.video
+//       ? uploadedFiles.video[0]
+//       : null;
+
+//     next();
+//   } catch (error) {
+//     console.error("Upload error:", error);
+//     res
+//       .status(500)
+//       .json({ error: "File upload failed", details: error.message });
+//   }
+// };
+
+const uploadToS3Add = async (req, res, next) => {
+  try {
+    if (!req.files || !req.files.images || !req.files.video) {
+      return res.status(400).json({ error: "Images and video are required." });
+    }
 
     const uploadedFiles = {};
     for (const [key, files] of Object.entries(req.files)) {
@@ -73,16 +115,59 @@ const uploadToS3 = async (req, res, next) => {
             params: uploadParams,
           });
 
-          const uploadResult = await uploader.done();
+          await uploader.done();
           return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
         })
       );
     }
-    // console.log("Uploaded files:", uploadedFiles);
+
     req.body.product_image = uploadedFiles.images || [];
     req.body.product_video = uploadedFiles.video
       ? uploadedFiles.video[0]
       : null;
+
+    next();
+  } catch (error) {
+    console.error("Upload error:", error);
+    res
+      .status(500)
+      .json({ error: "File upload failed", details: error.message });
+  }
+};
+
+const uploadToS3Edit = async (req, res, next) => {
+  try {
+    if (!req.files || Object.keys(req.files).length === 0) {
+      // No new files uploaded — keep existing images & video
+      return next();
+    }
+
+    const uploadedFiles = {};
+    for (const [key, files] of Object.entries(req.files)) {
+      uploadedFiles[key] = await Promise.all(
+        files.map(async (file) => {
+          const uploadParams = {
+            Bucket: process.env.AWS_S3_BUCKET_NAME,
+            Key: `product_files/${Date.now()}-${file.originalname}`,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+          };
+
+          const uploader = new Upload({
+            client: s3,
+            params: uploadParams,
+          });
+
+          await uploader.done();
+          return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+        })
+      );
+    }
+
+    req.body.product_image = uploadedFiles.images || undefined;
+    req.body.product_video = uploadedFiles.video
+      ? uploadedFiles.video[0]
+      : undefined;
 
     next();
   } catch (error) {
@@ -99,7 +184,7 @@ router.post(
     { name: "images", maxCount: 6 },
     { name: "video", maxCount: 1 },
   ]),
-  uploadToS3,
+  uploadToS3Add,
   // (req, res, next) => {
   //   console.log("Request Files:", req.files);
   //   console.log("Request Body:", req.body);
@@ -138,7 +223,7 @@ router.put(
     { name: "images", maxCount: 6 },
     { name: "video", maxCount: 1 },
   ]),
-  uploadToS3,
+  uploadToS3Edit,
   editProduct
 );
 
@@ -146,7 +231,7 @@ router.put(
 router.put(
   "/add-product-image/:id",
   upload.fields([{ name: "images", maxCount: 6 }]),
-  uploadToS3,
+  uploadToS3Add,
   addProductImage
 );
 

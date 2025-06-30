@@ -43,7 +43,7 @@ const uploadToS3 = async (req, res, next) => {
       return res.status(400).json({ error: "No files provided" });
     }
 
-    console.log("Uploading files to S3...");
+    // console.log("Uploading files to S3...");
 
     const uploadedFiles = await Promise.all(
       req.files.images.map(async (file) => {

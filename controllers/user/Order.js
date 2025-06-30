@@ -535,7 +535,7 @@ exports.getOrderByOrderId = async (req, res) => {
     if (!orderId) {
       return res.status(404).json({ message: "Order not found" });
     }
-    console.log("orderId", orderId);
+    // console.log("orderId", orderId);
 
     res.status(200).json({ orderId });
   } catch (error) {
