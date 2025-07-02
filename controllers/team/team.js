@@ -82,6 +82,8 @@ exports.createTeam = async (req, res) => {
       manage_sellproducts,
       manage_rentalproducts,
       event_report,
+      vendor_invoice,
+      service_list,
       calculate,
       cancel_event,
       reschedule_event,
@@ -127,6 +129,8 @@ exports.createTeam = async (req, res) => {
       manage_sellproducts,
       manage_rentalproducts,
       event_report,
+      vendor_invoice,
+      service_list,
       calculate,
       cancel_event,
       reschedule_event,
@@ -277,6 +281,8 @@ exports.updateUser = async (req, res) => {
       manage_sellproducts,
       manage_rentalproducts,
       event_report,
+      vendor_invoice,
+      service_list,
       calculate,
       cancel_event,
       reschedule_event,
@@ -295,6 +301,8 @@ exports.updateUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    const updateData = {};
+
     if (member_name) user.member_name = member_name;
     if (mobile_number) user.mobile_number = mobile_number;
     if (password) user.password = password;
@@ -320,6 +328,8 @@ exports.updateUser = async (req, res) => {
     if (state) user.state = state;
     if (city) user.city = city;
     if (event_report) user.event_report = event_report;
+    if (vendor_invoice) user.vendor_invoice = vendor_invoice;
+    if (service_list) user.service_list = service_list;
     if (calculate) user.calculate = calculate;
     if (cancel_event) user.cancel_event = cancel_event;
     if (reschedule_event) user.reschedule_event = reschedule_event;
@@ -332,17 +342,18 @@ exports.updateUser = async (req, res) => {
     if (tnc) user.tnc = tnc;
     if (youtube_video) user.youtube_video = youtube_video;
 
-    let updateUser = await teamSchema.findOneAndUpdate(
+    const updatedUser = await teamSchema.findOneAndUpdate(
       { _id: memberId },
-      user,
-      {
-        new: true,
-      }
+      { $set: updateData },
+      { new: true }
     );
+
+    // await user.save();
+
     res.status(200).json({
       message: "User updated successfully",
       status: true,
-      data: updateUser,
+      data: updatedUser,
     });
   } catch (error) {
     console.error(error);
@@ -350,6 +361,36 @@ exports.updateUser = async (req, res) => {
   }
 };
 
+exports.updatePassword = async (req, res) => {
+  const memberId = req.params.id;
+  try {
+    const { password } = req.body;
+    // console.log("Request body:", req.body);
+
+    const user = await teamSchema.findOne({ _id: memberId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (password) user.password = password;
+
+    let updatePassword = await teamSchema.findOneAndUpdate(
+      { _id: memberId },
+      user,
+      {
+        new: true,
+      }
+    );
+    res.status(200).json({
+      message: "Password Updated",
+      status: true,
+      data: updatePassword,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 exports.deleteTeamUser = async (req, res) => {
   try {
     const _id = req.params.id;

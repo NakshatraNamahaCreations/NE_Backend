@@ -23,6 +23,8 @@ const teamSchema = new mongoose.Schema({
   manage_sellproducts: Boolean,
   manage_rentalproducts: Boolean,
   event_report: Boolean,
+  vendor_invoice: Boolean,
+  service_list: Boolean,
   calculate: Boolean,
   cancel_event: Boolean,
   reschedule_event: Boolean,

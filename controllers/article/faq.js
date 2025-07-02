@@ -2,8 +2,9 @@ const faqSchema = require("../../models/article/faq");
 
 exports.addFaq = async (req, res) => {
   try {
-    const { question, answer } = req.body;
+    const { selected_type, question, answer } = req.body;
     const faq = new faqSchema({
+      selected_type,
       question,
       answer,
     });
@@ -20,7 +21,39 @@ exports.addFaq = async (req, res) => {
 
 exports.getAllFaq = async (req, res) => {
   try {
-    const faq = await faqSchema.find();
+    const faq = await faqSchema.find().sort({ _id: -1 });
+    if (faq.length === 0) {
+      return res.status(404).json({ message: "faq not found" });
+    } else {
+      res.status(200).json({ faq: faq });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getAllUserFAQ = async (req, res) => {
+  try {
+    const faq = await faqSchema
+      .find({ selected_type: "user" })
+      .sort({ _id: -1 });
+    if (faq.length === 0) {
+      return res.status(404).json({ message: "faq not found" });
+    } else {
+      res.status(200).json({ faq: faq });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getAllVendorFAQ = async (req, res) => {
+  try {
+    const faq = await faqSchema
+      .find({ selected_type: "vendor" })
+      .sort({ _id: -1 });
     if (faq.length === 0) {
       return res.status(404).json({ message: "faq not found" });
     } else {

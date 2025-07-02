@@ -7,6 +7,7 @@ const {
   getUser,
   unblockMember,
   updateUser,
+  updatePassword,
   teamUserLogin,
   deleteTeamUser,
   logout,
@@ -19,6 +20,7 @@ router.post("/team-user-login", teamUserLogin);
 router.put("/block-user/:id", blockMember);
 router.put("/unblock-user/:id", unblockMember);
 router.put("/update-user/:id", updateUser);
+router.put("/update-password/:id", updatePassword);
 router.delete("/delete-team-user/:id", deleteTeamUser);
 router.post("/logout-user/:id", logout);
 
