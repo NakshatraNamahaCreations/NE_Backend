@@ -21,7 +21,7 @@ exports.addFaq = async (req, res) => {
 
 exports.getAllFaq = async (req, res) => {
   try {
-    const faq = await faqSchema.find().sort({ _id: -1 });
+    const faq = await faqSchema.find();
     if (faq.length === 0) {
       return res.status(404).json({ message: "faq not found" });
     } else {
@@ -35,9 +35,8 @@ exports.getAllFaq = async (req, res) => {
 
 exports.getAllUserFAQ = async (req, res) => {
   try {
-    const faq = await faqSchema
-      .find({ selected_type: "user" })
-      .sort({ _id: -1 });
+    const faq = await faqSchema.find({ selected_type: "user" });
+
     if (faq.length === 0) {
       return res.status(404).json({ message: "faq not found" });
     } else {
@@ -51,9 +50,8 @@ exports.getAllUserFAQ = async (req, res) => {
 
 exports.getAllVendorFAQ = async (req, res) => {
   try {
-    const faq = await faqSchema
-      .find({ selected_type: "vendor" })
-      .sort({ _id: -1 });
+    const faq = await faqSchema.find({ selected_type: "vendor" });
+
     if (faq.length === 0) {
       return res.status(404).json({ message: "faq not found" });
     } else {

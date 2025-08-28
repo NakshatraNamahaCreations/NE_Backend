@@ -102,103 +102,103 @@ app.get("/", (req, res) => {
   res.send("Hey, Jimmy!...This is Event Box backend 🐶🤗");
 });
 
-async function initiateCall() {
-  const airtelUrl =
-    "https://8f10-2404-ba00-fd01-ebeb-f893-2495-9197-cd19.ngrok-free.app/v2/execute/workflow"; // Replace with actual Airtel API endpoint
+// async function initiateCall() {
+//   const airtelUrl =
+//     "https://8f10-2404-ba00-fd01-ebeb-f893-2495-9197-cd19.ngrok-free.app/v2/execute/workflow"; // Replace with actual Airtel API endpoint
 
-  // Base64 encoding username and password for Basic Auth
-  const username = "ff906156_c935_48e5_835a_5472dbf2af6b"; // Replace with actual Airtel username
-  const password = "OiisEVk47E"; // Replace with actual Airtel password
-  const authToken = Buffer.from(`${username}:${password}`).toString("base64");
+//   // Base64 encoding username and password for Basic Auth
+//   const username = "ff906156_c935_48e5_835a_5472dbf2af6b"; // Replace with actual Airtel username
+//   const password = "OiisEVk47E"; // Replace with actual Airtel password
+//   const authToken = Buffer.from(`${username}:${password}`).toString("base64");
 
-  const headers = {
-    Authorization: `Basic ${authToken}`,
-    "Content-Type": "application/json",
-  };
+//   const headers = {
+//     Authorization: `Basic ${authToken}`,
+//     "Content-Type": "application/json",
+//   };
 
-  const data = {
-    callFlowId: "9b71-4dcb-8ed1-e9a5a5fe5c15", // Replace with actual callFlowId
-    customerId: "87178372-9b71-4dcb-8ed1-e9a5a5fe5c15", // Replace with actual customerId
-    callType: "OUTBOUND",
-    callFlowConfiguration: {
-      initiateCall_1: {
-        mergingStrategy: "SEQUENTIAL",
-        participants: [
-          {
-            participantAddress: ["9164566466"], // Replace with actual phone number
-            callerId: "8526190332", // Replace with your caller ID
-            participantName: "A",
-            maxRetries: 1,
-            maxTime: 0,
-          },
-        ],
-        maxTime: 0,
-        callBackURLs: [
-          {
-            eventType: "CALL",
-            notifyURL: `${process.env.NGROK_URL}/call-events`,
-            method: "POST",
-            headers: {},
-          },
-          {
-            eventType: "CALL",
-            notifyURL: `${process.env.NGROK_URL}/call-events`,
-            method: "POST",
-            headers: {},
-          },
-        ],
-      },
-      addParticipant_1: {
-        mergingStrategy: "SEQUENTIAL",
-        maxTime: 0,
-        participants: [
-          {
-            participantAddress: ["9164566466"], // Replace with your phone number
-            callerId: "8526190332", // Replace with your caller ID
-            participantName: "B",
-            maxRetries: 1,
-            maxTime: 0,
-            enableEarlyMedia: true,
-          },
-        ],
-      },
-      record: {
-        enabled: true,
-      },
-    },
-  };
+//   const data = {
+//     callFlowId: "9b71-4dcb-8ed1-e9a5a5fe5c15", // Replace with actual callFlowId
+//     customerId: "87178372-9b71-4dcb-8ed1-e9a5a5fe5c15", // Replace with actual customerId
+//     callType: "OUTBOUND",
+//     callFlowConfiguration: {
+//       initiateCall_1: {
+//         mergingStrategy: "SEQUENTIAL",
+//         participants: [
+//           {
+//             participantAddress: ["9164566466"], // Replace with actual phone number
+//             callerId: "8526190332", // Replace with your caller ID
+//             participantName: "A",
+//             maxRetries: 1,
+//             maxTime: 0,
+//           },
+//         ],
+//         maxTime: 0,
+//         callBackURLs: [
+//           {
+//             eventType: "CALL",
+//             notifyURL: `${process.env.NGROK_URL}/call-events`,
+//             method: "POST",
+//             headers: {},
+//           },
+//           {
+//             eventType: "CALL",
+//             notifyURL: `${process.env.NGROK_URL}/call-events`,
+//             method: "POST",
+//             headers: {},
+//           },
+//         ],
+//       },
+//       addParticipant_1: {
+//         mergingStrategy: "SEQUENTIAL",
+//         maxTime: 0,
+//         participants: [
+//           {
+//             participantAddress: ["9164566466"], // Replace with your phone number
+//             callerId: "8526190332", // Replace with your caller ID
+//             participantName: "B",
+//             maxRetries: 1,
+//             maxTime: 0,
+//             enableEarlyMedia: true,
+//           },
+//         ],
+//       },
+//       record: {
+//         enabled: true,
+//       },
+//     },
+//   };
 
-  try {
-    const response = await axios.post(airtelUrl, data, { headers });
-    console.log("Call initiated successfully:", response.data);
-  } catch (error) {
-    console.error(
-      "Error initiating call:",
-      error.response ? error.response.data : error.message
-    );
-  }
-}
+//   try {
+//     const response = await axios.post(airtelUrl, data, { headers });
+//     console.log("Call initiated successfully:", response.data);
+//   } catch (error) {
+//     console.error(
+//       "Error initiating call:",
+//       error.response ? error.response.data : error.message
+//     );
+//   }
+// }
 
-// Endpoint to trigger the call
-app.post("/v2/execute/workflow", async (req, res) => {
-  try {
-    await initiateCall();
-    res.sendStatus(200);
-  } catch (error) {
-    res.status(500).json({ error: "Error initiating call" });
-  }
-});
+// // Endpoint to trigger the call
+// app.post("/v2/execute/workflow", async (req, res) => {
+//   try {
+//     await initiateCall();
+//     res.sendStatus(200);
+//   } catch (error) {
+//     res.status(500).json({ error: "Error initiating call" });
+//   }
+// });
 
-// Endpoint to handle call events
-app.post("/call-events", (req, res) => {
-  const event = req.body;
-  console.log("Received event:", JSON.stringify(event, null, 2));
-  console.log("Received call event:", event);
+// // Endpoint to handle call events
+// app.post("/call-events", (req, res) => {
+//   const event = req.body;
+//   console.log("Received event:", JSON.stringify(event, null, 2));
+//   console.log("Received call event:", event);
 
-  // Handle the event, e.g., log it, store it in a database, etc.
+//   // Handle the event, e.g., log it, store it in a database, etc.
 
-  res.sendStatus(200); // Send acknowledgment back to the API
-});
+//   res.sendStatus(200); // Send acknowledgment back to the API
+// });
 
 // app.post("/initiate-call", async (req, res) => {
 //   const { caller, receiver } = req.body; // Get caller and receiver from the request body

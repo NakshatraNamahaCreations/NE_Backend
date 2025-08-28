@@ -59,6 +59,7 @@ const userOrderSchema = new mongoose.Schema(
     payment_method: String,
     order_status: String,
     payment_status: String,
+    transaction_id: String,
     cancel_reason: String,
     return_reason: String,
     reason_command: String,

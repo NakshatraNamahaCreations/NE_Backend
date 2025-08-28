@@ -140,6 +140,7 @@ exports.userOrder = async (req, res) => {
       paid_amount,
       payment_method,
       payment_status,
+      transaction_id,
       order_status,
       user_id,
       user_name,
@@ -157,7 +158,7 @@ exports.userOrder = async (req, res) => {
       booking_from,
     } = req.body;
 
-    const SMS_TYPE = "delivery_template";
+    const SMS_TYPE = "Delivery Template 281224";
 
     const parsedProductData = JSON.parse(product_data);
     const parsedServiceData = JSON.parse(service_data);
@@ -194,6 +195,7 @@ exports.userOrder = async (req, res) => {
       paid_amount,
       payment_method,
       payment_status,
+      transaction_id,
       order_status,
       user_id,
       user_name,
@@ -240,7 +242,7 @@ exports.userOrder = async (req, res) => {
       await notificationSchema.create(serviceNotification);
     }
     // mail the user with the order details
-    const deliveryMessage = `Hello Naveen,Your one-time`;
+    const deliveryMessage = `Dear ${user_name}, Thank you for your purchase! We're excited to confirm that we've received your order #{#var#}. Your order is being processed and we’ll notify you once it’s on its way. Order Details: Order Number: {#var#} Items Ordered: {#var#} – {#var#} – {#var#} {#var#} –{#var#} – {#var#} {#var#} Billing Information: Billing Name: {#var#} Billing Address: {#var#} Shipping Information: Shipping Address: {#var#} Shipping Method: {#var#} Estimated Delivery Date: {#var#} If you have any questions or need to make changes, feel free to reach out to our customer support at Support@nithyaevents.com. We’re here to help! Thank you for choosing NithyaEvent. We hope you have the best experience! Best regards, NithyaEvent Support@nithyaevents.com www.nithyaevent.com`;
     try {
       await sendUserOrderEmail(
         newOrder._id.toString().slice(-6),
