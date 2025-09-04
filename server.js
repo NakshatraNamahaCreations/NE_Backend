@@ -10,6 +10,24 @@ const Buffer = require("buffer").Buffer;
 // Load environment variables
 dotenv.config();
 
+const seedConfig = async () => {
+  try {
+    const Config = mongoose.model("Config");
+    const existingConfig = await Config.findOne();
+    if (!existingConfig) {
+      await Config.create({
+        _id: "app_config_1",
+        version: "2.0.0", // Set a version different from your app's current version for testing
+        forceUpdate: true,
+        createdAt: new Date(),
+      });
+      console.log("Default config seeded");
+    }
+  } catch (error) {
+    console.error("Error seeding config:", error);
+  }
+};
+
 // Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URI, {
@@ -100,6 +118,36 @@ app.use((err, req, res, next) => {
 
 app.get("/", (req, res) => {
   res.send("Hey, Jimmy!...This is Event Box backend 🐶🤗");
+});
+
+const configSchema = new mongoose.Schema({
+  _id: { type: String, required: true },
+  version: String,
+  forceUpdate: Boolean,
+  createdAt: { type: Date, default: Date.now }, // Added for sorting
+});
+
+const Config = mongoose.model("Config", configSchema);
+
+app.get("/api/latest-version", async (req, res) => {
+  try {
+    const config = await Config.findOne().sort({ createdAt: -1 });
+    if (!config) {
+      return res.status(404).json({ error: "Configuration not found" });
+    }
+
+    res.json({
+      version: config.version,
+      forceUpdate: config.forceUpdate,
+    });
+  } catch (error) {
+    console.error("Error fetching latest version:", error);
+    res.status(500).json({ error: "Failed to fetch version" });
+  }
+});
+
+app.get("/api/test", (req, res) => {
+  res.json({ message: "API is working!" });
 });
 
 // async function initiateCall() {
