@@ -219,12 +219,12 @@ class Paymentgetway {
         JSON.stringify({
           merchantId: process.env.PHONEPE_MERCHANT_ID,
           merchantTransactionId: transactionId,
-          merchantUserId: "asfnjk212",
-          amount: 100,
+          merchantUserId: req.body.userId,
+          amount: req.body.amount,
           redirectUrl: "",
           redirectMode: "POST",
           callbackUrl: `https://api.nithyaevent.com/api/payment/status/M22E0HWMLLIYY/${transactionId}`,
-          mobileNumber: "8951592630",
+          mobileNumber: req.body.mobileNumber,
           paymentInstrument: {
             type: "PAY_PAGE",
           },
