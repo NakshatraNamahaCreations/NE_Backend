@@ -223,7 +223,7 @@ exports.loginWithMobileNumber = async (req, res) => {
 
     await otpSchema.create({ mobilenumber, otp, expiry });
     // const otpMessage = `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
-    const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
+    // const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
 
     // const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
     // console.log("smsResponse", smsResponse);
@@ -485,7 +485,12 @@ exports.editProfile = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
   try {
-    await User.findByIdAndDelete(req.user.id);
+    const deletedUser = await UserSchema.findByIdAndDelete(req.params.id);
+
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     res.json({ message: "User deleted successfully" });
   } catch (error) {
     console.error(error);

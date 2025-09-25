@@ -148,6 +148,6 @@ router.put(
   editProfile
 );
 router.put("/save-delivery-address/:id", addAddress);
-router.delete("/profile", deleteUser);
+router.delete("/delete-profile/:id", deleteUser);
 
 module.exports = router;
