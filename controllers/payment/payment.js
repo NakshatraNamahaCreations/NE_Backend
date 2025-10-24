@@ -299,10 +299,6 @@ class Paymentgetway {
         success: true,
         responseData: response.data,
       });
-      return res.status(500).json({
-        success: false,
-        responseData: response.data,
-      });
     } catch (error) {
       console.error("Error checking transaction status:", error);
       res.status(500).json({

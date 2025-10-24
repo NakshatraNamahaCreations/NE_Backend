@@ -20,14 +20,14 @@ exports.sendSMS = async (mobilenumber, message, SMS_TYPE) => {
       dltTemplateId:
         SMS_TYPE === "welcome_template"
           ? "1007115106480901552"
-          : SMS_TYPE === "otp_template"
-          ? "1007622509300482217"
-          : SMS_TYPE === "delivery_template"
-          ? "1007108509874790937"
-          : null,
+          : SMS_TYPE === "OTP TEMPLATE 24-12-24"
+            ? "1007622509300482217"
+            : SMS_TYPE === "Delivery Template 281224"
+              ? "1007108509874790937"
+              : null,
       entityId: ENTITY_ID,
     });
-
+    console.log("Send OTP", JSON.parse(data));
     let config = {
       method: "post",
       url: AIRTLE_URL,
@@ -39,6 +39,7 @@ exports.sendSMS = async (mobilenumber, message, SMS_TYPE) => {
     };
 
     const response = await axios(config);
+    console.log("SMS response:", response.data);
     return { success: true, data: response.data };
   } catch (error) {
     console.error(

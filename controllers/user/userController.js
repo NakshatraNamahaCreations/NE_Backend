@@ -201,7 +201,7 @@ exports.login = async (req, res) => {
 
 exports.loginWithMobileNumber = async (req, res) => {
   const { mobilenumber } = req.body;
-  const SMS_TYPE = "otp_template";
+  const SMS_TYPE = "OTP TEMPLATE 24-12-24";
   try {
     if (!mobilenumber) {
       return res.status(400).json({ error: "Mobilenumber is required" });
@@ -223,14 +223,14 @@ exports.loginWithMobileNumber = async (req, res) => {
 
     await otpSchema.create({ mobilenumber, otp, expiry });
     // const otpMessage = `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
-    // const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
+    const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
 
-    // const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
-    // console.log("smsResponse", smsResponse);
+    const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
+    console.log("smsResponse", smsResponse);
 
-    // if (!smsResponse.success) {
-    //   return res.status(500).json({ message: "Failed to send OTP" });
-    // }
+    if (!smsResponse.success) {
+      return res.status(500).json({ message: "Failed to send OTP" });
+    }
 
     res.status(200).json({
       message: "Login successful. OTP sent to your mobile number.",
@@ -244,7 +244,7 @@ exports.loginWithMobileNumber = async (req, res) => {
 
 exports.resendOTP = async (req, res) => {
   const { mobilenumber } = req.body;
-  const SMS_TYPE = "otp_template";
+  const SMS_TYPE = "OTP TEMPLATE 24-12-24";
   try {
     const user = await UserSchema.findOne({ mobilenumber });
     if (!user) {
