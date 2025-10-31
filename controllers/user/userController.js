@@ -201,7 +201,7 @@ exports.login = async (req, res) => {
 
 exports.loginWithMobileNumber = async (req, res) => {
   const { mobilenumber } = req.body;
-  const SMS_TYPE = "OTP TEMPLATE 24-12-24";
+  const SMS_TYPE = "otp 17.10.2025";
   try {
     if (!mobilenumber) {
       return res.status(400).json({ error: "Mobilenumber is required" });
@@ -222,8 +222,9 @@ exports.loginWithMobileNumber = async (req, res) => {
     const expiry = new Date(Date.now() + 60 * 1000);
 
     await otpSchema.create({ mobilenumber, otp, expiry });
-    // const otpMessage = `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
-    const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
+    const otpMessage = `Hello ${user.username}, Your One Time Password for registration is ${otp}, this code is valid for next ${60} seconds please enter the code to proceed with anything you need. Thank You. Nithayevent`
+    // `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
+    // const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
 
     const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
     console.log("smsResponse", smsResponse);

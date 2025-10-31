@@ -65,7 +65,7 @@ const sendUserOrderEmail = async (
   const emailData = {
     sender: {
       name: "Nithyaevent",
-      email: "support@nithyaevents.com",
+      email: "nithyaevents24@gmail.com",
     },
     to: [{ email: email, name: user_name }],
     subject: "Booking Confirmation - Nithyaevent",
@@ -83,7 +83,7 @@ const sendUserOrderEmail = async (
 
          <p>Below are the details of your booking:</p> 
 
-        <p><strong>Order Number:</strong> INV${orderID}</p>
+        <p><strong>Order Number:</strong> ${orderID}</p>
         <p><strong>Order Date:</strong> ${orderDate}</p>
         <p><strong>Total Amount:</strong> ${totalAmount}</p> 
 
@@ -91,8 +91,8 @@ const sendUserOrderEmail = async (
         <p>We look forward to serving you again!</p>
 
         <p>Best Regards,</p>
-        <p><strong>Support Team</strong><br>Nithyaevent<br><a href="mailto:support@nithyaevent.com">support@nithyaevent.com</a> | 8867999997</p>
-        <p>&copy; 2024 All Rights Reserved, Nithyaevent<br>Designed & Developed by Kadagam Ventures Private Limited</p>
+        <p><strong>Support Team</strong><br>Nithyaevent<br><a href="mailto:support@nithyaevents.com">support@nithyaevents.com</a> | 99801370001</p>
+       <p>&copy; 2024 All Rights Reserved, Nithyaevent<br>Designed & Developed by Kadagam Ventures Private Limited</p>
       </body>
       </html>
     `,
@@ -123,8 +123,8 @@ exports.userOrder = async (req, res) => {
       receiver_mobilenumber,
       receiver_name,
       venue_name,
-      // setup_start_date,
-      // setup_end_date,
+      setup_start_date,
+      setup_end_date,
       setup_date,
       rehearsal_date,
       setup_start_time,
@@ -151,7 +151,7 @@ exports.userOrder = async (req, res) => {
       event_end_date,
       number_of_days,
       event_name,
-      ordered_date,
+      // ordered_date,
       location_lat,
       location_long,
       vendors_message,
@@ -171,7 +171,30 @@ exports.userOrder = async (req, res) => {
     //   ? req.files["upload_invitation"][0].path
     //   : null;
 
+
+    // Generate Order ID
+    const brand = "NTYEVT";
+
+    // Format date to YYMMDD
+    const orderedDate = new Date();
+    const year = orderedDate.getFullYear().toString().slice(-2);
+    const month = String(orderedDate.getMonth() + 1).padStart(2, "0");
+    const day = String(orderedDate.getDate()).padStart(2, "0");
+    const datePart = `${year}${month}${day}`;
+
+    // Count total items (sum of all categories)
+    const totalItems =
+      parsedProductData.length + parsedServiceData.length + parsedTechData.length;
+    const itemPart = String(totalItems).padStart(2, "0"); // e.g., 03
+
+    // Generate unique 4-digit identifier
+    const uniquePart = Math.floor(1000 + Math.random() * 9000); // 1000–9999
+
+    // Combine all parts
+    const orderId = `${brand}-${datePart}-${itemPart}-${uniquePart}`;
+
     const newOrder = new UserOrder({
+      order_id: orderId,
       product_data: parsedProductData,
       service_data: parsedServiceData,
       tech_data: parsedTechData,
@@ -180,8 +203,8 @@ exports.userOrder = async (req, res) => {
       venue_name,
       setup_start_time,
       setup_end_time,
-      // setup_start_date,
-      // setup_end_date,
+      setup_start_date,
+      setup_end_date,
       setup_date,
       rehearsal_date,
       event_start_time,
@@ -206,7 +229,7 @@ exports.userOrder = async (req, res) => {
       event_end_date,
       number_of_days,
       event_name,
-      ordered_date,
+      ordered_date: new Date(),
       upload_gatepass: req.body.upload_gatepass,
       upload_invitation: req.body.upload_invitation,
       location_lat,
@@ -243,9 +266,10 @@ exports.userOrder = async (req, res) => {
     }
     // mail the user with the order details
     const deliveryMessage = `Dear ${user_name}, Thank you for your purchase! We're excited to confirm that we've received your order #{#var#}. Your order is being processed and we’ll notify you once it’s on its way. Order Details: Order Number: {#var#} Items Ordered: {#var#} – {#var#} – {#var#} {#var#} –{#var#} – {#var#} {#var#} Billing Information: Billing Name: {#var#} Billing Address: {#var#} Shipping Information: Shipping Address: {#var#} Shipping Method: {#var#} Estimated Delivery Date: {#var#} If you have any questions or need to make changes, feel free to reach out to our customer support at Support@nithyaevents.com. We’re here to help! Thank you for choosing NithyaEvent. We hope you have the best experience! Best regards, NithyaEvent Support@nithyaevents.com www.nithyaevent.com`;
+    const ordered_date = new Date();
     try {
       await sendUserOrderEmail(
-        newOrder._id.toString().slice(-6),
+        orderId,
         ordered_date,
         paid_amount,
         user_name,

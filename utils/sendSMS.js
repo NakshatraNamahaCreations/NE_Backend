@@ -20,8 +20,8 @@ exports.sendSMS = async (mobilenumber, message, SMS_TYPE) => {
       dltTemplateId:
         SMS_TYPE === "welcome_template"
           ? "1007115106480901552"
-          : SMS_TYPE === "OTP TEMPLATE 24-12-24"
-            ? "1007622509300482217"
+          : SMS_TYPE === "otp 17.10.2025"
+            ? "1007964006533242463"
             : SMS_TYPE === "Delivery Template 281224"
               ? "1007108509874790937"
               : null,
