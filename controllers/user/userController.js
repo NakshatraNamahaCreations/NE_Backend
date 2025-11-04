@@ -297,7 +297,7 @@ exports.verifyOTP = async (req, res) => {
 
 exports.verifyIdToken = async (req, res) => {
   const { token, email } = req.body;
-  console.log("Received token:", token);
+  // console.log("Received token:", token);
   try {
     // const ticket = await client.verifyIdToken({
     //   idToken: token,

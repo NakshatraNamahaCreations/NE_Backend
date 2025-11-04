@@ -5,12 +5,12 @@ exports.addProduct = async (req, res) => {
     if (!req.body.product_image || !Array.isArray(req.body.product_image)) {
       return res.status(400).json({ message: "Product images are required" });
     }
-
     const {
       shop_name,
       vendor_id,
       vendor_name,
       product_category,
+      product_description,
       product_type,
       product_name,
       product_price,
@@ -42,6 +42,7 @@ exports.addProduct = async (req, res) => {
       vendor_id,
       vendor_name,
       product_category,
+      product_description,
       product_type,
       product_name,
       product_image: req.body.product_image,
@@ -297,6 +298,12 @@ exports.editProduct = async (req, res) => {
 exports.blockProductsAvailability = async (req, res) => {
   try {
     const { productId, blockedStartDate, blockedEndDate } = req.body;
+
+    const ids = Array.isArray(productId) ? productId : [productId];
+
+    if (!ids || ids.length === 0) {
+      return res.status(400).json({ message: "Product ID(s) required" });
+    }
 
     if (!productId || !Array.isArray(productId) || productId.length === 0) {
       return res.status(400).json({ message: "Product ID array is required" });

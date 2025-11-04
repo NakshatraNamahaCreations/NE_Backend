@@ -69,6 +69,42 @@ exports.vendorRegister = async (req, res) => {
   }
 };
 
+exports.editProfilePicture = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { shop_image_or_logo } = req.body;
+
+    const findUser = await vendorSchema.findById(userId);
+    if (!findUser) {
+      return res.status(404).json({
+        status: false,
+        error: "User not found",
+      });
+    }
+
+    const updateFields = {};
+    if (shop_image_or_logo) updateFields.shop_image_or_logo = shop_image_or_logo;
+
+    const updatedUser = await vendorSchema.findByIdAndUpdate(
+      userId,
+      { $set: updateFields },
+      { new: true }
+    );
+    console.log("updatedUser", updatedUser);
+
+    return res.status(200).json({
+      status: true,
+      success: "Profile updated",
+      data: updatedUser,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: false,
+      error: error.message,
+    });
+  }
+};
+
 exports.addVendorBusinessDetails = async (req, res) => {
   try {
     const vendorId = req.params.id;

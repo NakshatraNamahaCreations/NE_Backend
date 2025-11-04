@@ -379,6 +379,8 @@ exports.getSellerProducts = async (req, res) => {
             product_data: filteredProducts,
             eventStartDate: order.event_start_date,
             eventEndDate: order.event_end_date,
+            setupStartDate: order.setup_start_date,
+            setupEndDate: order.setup_end_date,
           };
         }
 

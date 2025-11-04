@@ -5,6 +5,7 @@ const { Upload } = require("@aws-sdk/lib-storage");
 const router = express.Router();
 const {
   vendorRegister,
+  editProfilePicture,
   addVendorBusinessDetails,
   vendorLoginWithGmail,
   getVendorProfile,
@@ -171,6 +172,12 @@ const uploadToS3ForAdditionalImages = async (req, res, next) => {
 
 router.post("/refresh-token", refreshToken);
 router.post("/register", vendorRegister);
+router.put(
+  "/edit-vendor-profile/:id",
+  upload.fields([{ name: "shop_image_or_logo", maxCount: 1 }]),
+  uploadToS3,
+  editProfilePicture
+);
 router.put(
   "/add-vendor-business-details/:id",
   upload.fields([
