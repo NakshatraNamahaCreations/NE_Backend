@@ -139,6 +139,8 @@ app.get("/api/latest-version", async (req, res) => {
     res.json({
       version: config.version,
       forceUpdate: config.forceUpdate,
+      // If you want to force users to update, set "forceUpdate": true.
+      // If you only want to notify them, set "forceUpdate": false.
     });
   } catch (error) {
     console.error("Error fetching latest version:", error);

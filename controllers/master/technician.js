@@ -93,3 +93,32 @@ exports.deleteTechnician = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.editTechnician = async (req, res) => {
+  try {
+    const technicianId = req.params.id;
+    const existingTech = await technicianShcema.findById(technicianId);
+
+    if (!existingTech) {
+      return res.status(404).json({ message: "Technician not found" });
+    }
+
+    const { category, service_name, tech_name, price } = req.body;
+
+    existingTech.category = category || existingTech.category;
+    existingTech.service_name = service_name || existingTech.service_name;
+    existingTech.tech_name = tech_name || existingTech.tech_name;
+    existingTech.price = price || existingTech.price;
+
+    const updatedTech = await existingTech.save();
+
+    res.status(200).json({
+      message: "Technician updated successfully",
+      status: true,
+      data: updatedTech,
+    });
+  } catch (error) {
+    console.error("Edit Technician Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

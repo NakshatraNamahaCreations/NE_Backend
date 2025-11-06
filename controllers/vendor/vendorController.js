@@ -677,56 +677,44 @@ exports.getServiceReview = async (req, res) => {
 //   }
 // };
 
-// exports.updateVendorProfile = async (req, res) => {
-//   try {
-//     const vendorId = req.params.id;
-//     const {
-//       company_type,
-//       company_name,
-//       designation,
-//       name,
-//       mca_panel_member_name,
-//       gst_number,
-//       pan_number,
-//       trand_license,
-//       cin_number,
-//       moa_number,
-//     } = req.body;
-//     let vendor = await vendorSchema.findOne({ _id: vendorId });
-//     if (!vendor) {
-//       return res.status(404).json({
-//         status: 404,
-//         error: "vendor not found",
-//       });
-//     }
-//     vendor.company_type = company_type || vendor.company_type;
-//     vendor.company_name = company_name || vendor.company_name;
-//     vendor.designation = designation || vendor.designation;
-//     vendor.name = name || vendor.name;
-//     vendor.mca_panel_member_name =
-//       mca_panel_member_name || vendor.mca_panel_member_name;
-//     vendor.gst_number = gst_number || vendor.gst_number;
-//     vendor.pan_number = pan_number || vendor.pan_number;
-//     vendor.trand_license = trand_license || vendor.trand_license;
-//     vendor.cin_number = cin_number || vendor.cin_number;
-//     vendor.moa_number = moa_number || vendor.moa_number;
+exports.updateVendorProfile = async (req, res) => {
+  try {
+    const vendorId = req.params.id;
+    const {
+      gst_number,
+      pan_number,
+      shop_image_or_logo,
+      aadhaar_front,
+      aadhaar_back
+    } = req.body;
+    let vendor = await vendorSchema.findById(vendorId);
+    if (!vendor) {
+      return res.status(404).json({
+        status: 404,
+        error: "vendor not found",
+      });
+    }
+    const updateFields = {};
+    if (gst_number) updateFields.gst_number = gst_number;
+    if (pan_number) updateFields.pan_number = pan_number;
+    if (shop_image_or_logo) updateFields.shop_image_or_logo = shop_image_or_logo;
+    if (aadhaar_front) updateFields.aadhaar_front = aadhaar_front;
+    if (aadhaar_back) updateFields.aadhaar_back = aadhaar_back;
 
-//     let updatedVendor = await vendorSchema.findOneAndUpdate(
-//       { _id: vendorId },
-//       user,
-//       {
-//         new: true,
-//       }
-//     );
-//     res.status(200).json({
-//       status: true,
-//       success: "Details Added",
-//       data: updatedVendor,
-//     });
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
+    const updatedVendor = await vendorSchema.findByIdAndUpdate(
+      vendorId,
+      { $set: updateFields },
+      { new: true }
+    );
+    res.status(200).json({
+      status: true,
+      success: "Profile Updated",
+      data: updatedVendor,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 exports.addAddress = async (req, res) => {
   try {
