@@ -224,74 +224,121 @@ exports.getFeaturedProducts = async (req, res) => {
   }
 };
 
+// exports.editProduct = async (req, res) => {
+//   try {
+//     const productId = req.params.id;
+//     const fintProduct = await productSchema.findOne({ _id: productId });
+//     if (!fintProduct) {
+//       return res.status(404).json({ message: "Product not found" });
+//     }
+//     const {
+//       product_category,
+//       product_name,
+//       product_price,
+//       mrp_rate,
+//       discount,
+//       brand,
+//       stock_in_hand,
+//       model_name,
+//       material_type,
+//       product_dimension,
+//       product_weight,
+//       country_of_orgin,
+//       warranty,
+//       manufacturer_name,
+//       product_color,
+//     } = req.body;
+
+//     if (req.body.existingImages) {
+//       if (!Array.isArray(req.body.existingImages)) {
+//         req.body.existingImages = [req.body.existingImages];
+//       }
+//     }
+
+//     fintProduct.product_category =
+//       product_category || fintProduct.product_category;
+//     fintProduct.product_name = product_name || fintProduct.product_name;
+//     fintProduct.product_price = product_price || fintProduct.product_price;
+//     fintProduct.mrp_rate = mrp_rate || fintProduct.mrp_rate;
+//     fintProduct.discount = discount || fintProduct.discount;
+//     fintProduct.brand = brand || fintProduct.brand;
+//     fintProduct.stock_in_hand = stock_in_hand || fintProduct.stock_in_hand;
+//     fintProduct.model_name = model_name || fintProduct.model_name;
+//     fintProduct.material_type = material_type || fintProduct.material_type;
+//     fintProduct.product_dimension =
+//       product_dimension || fintProduct.product_dimension;
+//     fintProduct.product_weight = product_weight || fintProduct.product_weight;
+//     fintProduct.country_of_orgin =
+//       country_of_orgin || fintProduct.country_of_orgin;
+//     fintProduct.warranty = warranty || fintProduct.warranty;
+//     fintProduct.manufacturer_name =
+//       manufacturer_name || fintProduct.manufacturer_name;
+//     fintProduct.product_color = product_color || fintProduct.product_color;
+
+//     fintProduct.product_image = [
+//       ...(req.body.existingImages || []),
+//       ...(req.body.product_image || [])
+//     ];
+//     fintProduct.product_video =
+//       req.body.product_video || fintProduct.product_video;
+
+//     fintProduct.approval_status = "Under Review";
+
+//     let updateProduct = await productSchema.findOneAndUpdate(
+//       { _id: productId },
+//       fintProduct,
+//       {
+//         new: true,
+//       }
+//     );
+//     console.log("updateProduct", updateProduct);
+//     res.status(200).json({
+//       message: "Product updated successfully",
+//       status: true,
+//       data: updateProduct,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
 exports.editProduct = async (req, res) => {
   try {
     const productId = req.params.id;
-    const fintProduct = await productSchema.findOne({ _id: productId });
-    if (!fintProduct) {
+    const product = await productSchema.findById(productId);
+
+    if (!product)
       return res.status(404).json({ message: "Product not found" });
+
+    // ✅ existing images & videos sent from frontend
+    let existingImages = req.body.existingImages || [];
+    if (!Array.isArray(existingImages)) {
+      existingImages = [existingImages];
     }
-    const {
-      product_category,
-      product_name,
-      product_price,
-      mrp_rate,
-      discount,
-      brand,
-      stock_in_hand,
-      model_name,
-      material_type,
-      product_dimension,
-      product_weight,
-      country_of_orgin,
-      warranty,
-      manufacturer_name,
-      product_color,
-    } = req.body;
 
-    fintProduct.product_category =
-      product_category || fintProduct.product_category;
-    fintProduct.product_name = product_name || fintProduct.product_name;
-    fintProduct.product_price = product_price || fintProduct.product_price;
-    fintProduct.mrp_rate = mrp_rate || fintProduct.mrp_rate;
-    fintProduct.discount = discount || fintProduct.discount;
-    fintProduct.brand = brand || fintProduct.brand;
-    fintProduct.stock_in_hand = stock_in_hand || fintProduct.stock_in_hand;
-    fintProduct.model_name = model_name || fintProduct.model_name;
-    fintProduct.material_type = material_type || fintProduct.material_type;
-    fintProduct.product_dimension =
-      product_dimension || fintProduct.product_dimension;
-    fintProduct.product_weight = product_weight || fintProduct.product_weight;
-    fintProduct.country_of_orgin =
-      country_of_orgin || fintProduct.country_of_orgin;
-    fintProduct.warranty = warranty || fintProduct.warranty;
-    fintProduct.manufacturer_name =
-      manufacturer_name || fintProduct.manufacturer_name;
-    fintProduct.product_color = product_color || fintProduct.product_color;
+    const newUploadedImages = req.body.product_image || [];
 
-    fintProduct.product_image =
-      req.body.product_image || fintProduct.product_image;
-    fintProduct.product_video =
-      req.body.product_video || fintProduct.product_video;
+    // ✅ Merge old + new
+    product.product_image = [...existingImages, ...newUploadedImages];
 
-    fintProduct.approval_status = "Under Review";
+    // ✅ Video
+    product.product_video = req.body.product_video || req.body.existingVideo || product.product_video;
 
-    let updateProduct = await productSchema.findOneAndUpdate(
-      { _id: productId },
-      fintProduct,
-      {
-        new: true,
-      }
-    );
-    console.log("updateProduct", updateProduct);
+    // ✅ Update fields
+    Object.assign(product, req.body);
+    product.approval_status = "Under Review";
+
+    const updated = await product.save();
+
     res.status(200).json({
-      message: "Product updated successfully",
       status: true,
-      data: updateProduct,
+      message: "Product updated successfully",
+      data: updated,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    console.log(error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
