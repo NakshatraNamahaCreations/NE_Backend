@@ -30,10 +30,12 @@ const seedConfig = async () => {
 
 // Connect to MongoDB
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI,
+    //   {
+    //   useNewUrlParser: true,
+    //   useUnifiedTopology: true,
+    // }
+  )
   .then(() => console.log("Database Connected........."))
   .catch((err) => console.log("Database Not Connected!!!", err));
 

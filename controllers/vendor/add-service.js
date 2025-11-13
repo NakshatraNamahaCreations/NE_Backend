@@ -309,7 +309,7 @@ exports.approveServices = async (req, res) => {
     await notificationSchema.create({
       vendor_id: findServices.vendor_id, // Assuming the Services has a vendor_id field
       Services_id: servicesId,
-      notification_type: "services_approval",
+      notification_type: "service_approval",
       message: `Your Services "${findServices.service_name}" has been approved.`,
       status: "unread",
       metadata: {}, // Add additional metadata if needed

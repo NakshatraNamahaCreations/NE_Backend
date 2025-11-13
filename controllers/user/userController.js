@@ -212,22 +212,15 @@ exports.loginWithMobileNumber = async (req, res) => {
       console.log("mobilenumber not match");
       return res.status(400).json({ message: "Mobile Number doesn't exists" });
     }
-    // const isMatch = await bcrypt.compare(password, user.password);
-    // if (!isMatch) {
-    //   console.log("Password not match");
-    //   return res.status(400).json({ message: "Password doesn't exists" });
-    // }
 
     const otp = crypto.randomInt(100000, 999999);
     const expiry = new Date(Date.now() + 60 * 1000);
 
     await otpSchema.create({ mobilenumber, otp, expiry });
     const otpMessage = `Hello ${user.username}, Your One Time Password for registration is ${otp}, this code is valid for next ${60} seconds please enter the code to proceed with anything you need. Thank You. Nithayevent`
-    // `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
-    // const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
 
     const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
-    // console.log("smsResponse", smsResponse);
+    console.log("smsResponse", smsResponse);
 
     if (!smsResponse.success) {
       return res.status(500).json({ message: "Failed to send OTP" });
@@ -261,11 +254,11 @@ exports.resendOTP = async (req, res) => {
     // const otpMessage = `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
     const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
 
-    const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
+    // const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
 
-    if (!smsResponse.success) {
-      return res.status(500).json({ message: "Failed to send OTP" });
-    }
+    // if (!smsResponse.success) {
+    //   return res.status(500).json({ message: "Failed to send OTP" });
+    // }
 
     res.status(200).json({
       message: "OTP Resent",

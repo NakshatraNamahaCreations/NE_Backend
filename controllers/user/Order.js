@@ -67,7 +67,9 @@ const sendUserOrderEmail = async (
       name: "Nithyaevent",
       email: "nithyaevents24@gmail.com",
     },
-    to: [{ email: email, name: user_name }],
+    to: [{ email: email, name: user_name },
+    { email: "support@nithyaevents.com", name: "Nithyaevent Admin" }
+    ],
     subject: "Booking Confirmation - Nithyaevent",
     htmlContent: `
       <!DOCTYPE html>
@@ -267,10 +269,21 @@ exports.userOrder = async (req, res) => {
     // mail the user with the order details
     const deliveryMessage = `Dear ${user_name}, Thank you for your purchase! We're excited to confirm that we've received your order #{#var#}. Your order is being processed and we’ll notify you once it’s on its way. Order Details: Order Number: {#var#} Items Ordered: {#var#} – {#var#} – {#var#} {#var#} –{#var#} – {#var#} {#var#} Billing Information: Billing Name: {#var#} Billing Address: {#var#} Shipping Information: Shipping Address: {#var#} Shipping Method: {#var#} Estimated Delivery Date: {#var#} If you have any questions or need to make changes, feel free to reach out to our customer support at Support@nithyaevents.com. We’re here to help! Thank you for choosing NithyaEvent. We hope you have the best experience! Best regards, NithyaEvent Support@nithyaevents.com www.nithyaevent.com`;
     const ordered_date = new Date();
+    const formattedDate = ordered_date.toLocaleString("en-IN", {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata",
+    });
     try {
       await sendUserOrderEmail(
         orderId,
-        ordered_date,
+        formattedDate,
         paid_amount,
         user_name,
         user_mailid
@@ -482,6 +495,8 @@ exports.getServiceOrders = async (req, res) => {
             service_data: filteredService,
             eventStartDate: order.event_start_date,
             eventEndDate: order.event_end_date,
+            setupStartDate: order.setup_start_date,
+            setupEndDate: order.setup_end_date,
           };
         }
 
