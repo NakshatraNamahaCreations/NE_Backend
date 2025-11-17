@@ -219,12 +219,12 @@ exports.loginWithMobileNumber = async (req, res) => {
     await otpSchema.create({ mobilenumber, otp, expiry });
     const otpMessage = `Hello ${user.username}, Your One Time Password for registration is ${otp}, this code is valid for next ${60} seconds please enter the code to proceed with anything you need. Thank You. Nithayevent`
 
-    const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
-    console.log("smsResponse", smsResponse);
+    // const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
+    // console.log("smsResponse", smsResponse);
 
-    if (!smsResponse.success) {
-      return res.status(500).json({ message: "Failed to send OTP" });
-    }
+    // if (!smsResponse.success) {
+    //   return res.status(500).json({ message: "Failed to send OTP" });
+    // }
 
     res.status(200).json({
       message: "Login successful. OTP sent to your mobile number.",
