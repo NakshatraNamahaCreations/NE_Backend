@@ -129,6 +129,8 @@ exports.userOrder = async (req, res) => {
       setup_end_date,
       setup_date,
       rehearsal_date,
+      rehearsal_start_time,
+      rehearsal_end_time,
       setup_start_time,
       setup_end_time,
       event_start_time,
@@ -209,6 +211,8 @@ exports.userOrder = async (req, res) => {
       setup_end_date,
       setup_date,
       rehearsal_date,
+      rehearsal_start_time,
+      rehearsal_end_time,
       event_start_time,
       event_end_time,
       event_location,
@@ -368,7 +372,8 @@ exports.getSellerProducts = async (req, res) => {
         const filteredProducts = order.product_data.filter(
           (product) => product.sellerId === sellerId
         );
-
+        const returnTechnicianBasedOnSellerId = order.tech_data.length > 0 ?
+          order.tech_data.filter((ele) => ele.vendor_id === sellerId) : []
         // Normalize the order_status from frontend and from DB to lowercase
         const normalizedStatus = order_status?.trim().toLowerCase();
 
@@ -394,6 +399,7 @@ exports.getSellerProducts = async (req, res) => {
             eventEndDate: order.event_end_date,
             setupStartDate: order.setup_start_date,
             setupEndDate: order.setup_end_date,
+            technicianData: returnTechnicianBasedOnSellerId,
           };
         }
 
