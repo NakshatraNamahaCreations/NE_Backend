@@ -326,7 +326,31 @@ exports.editProduct = async (req, res) => {
     product.product_video = req.body.product_video || req.body.existingVideo || product.product_video;
 
     // ✅ Update fields
-    Object.assign(product, req.body);
+    // Object.assign(product, req.body);
+    const allowedFields = [
+      'product_name',
+      'product_price',
+      'discount',
+      'mrp_rate',
+      'product_category',
+      'brand',
+      'stock_in_hand',
+      'model_name',
+      'material_type',
+      'product_dimension',
+      'product_weight',
+      'country_of_orgin',
+      'warranty',
+      'manufacturer_name',
+      'product_color',
+      'product_description',
+    ];
+
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        product[field] = req.body[field];
+      }
+    });
     product.approval_status = "Under Review";
 
     const updated = await product.save();

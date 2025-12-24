@@ -41,15 +41,16 @@ const sendOnboardingEmail = async (email, username, mobilenumber, password) => {
       </head>
       <body>
         <h4>Dear ${username},</h4>
-        <p>Welcome to Nithyaevent! We’re thrilled to have you as a valued partner and look forward to helping you grow your business with us.</p>
+        <p>Welcome to Nithyaevent! We’re thrilled to have you as a customer We strive to provide the best service and products, and we're here to assist you with anything you need. Thank you Nithyaevent. support@nithyaevents.com</p>
         <p>Please log in and complete your profile to proceed further.</p>
         <h4>Your Account Details:</h4>         
-        <p><strong>Username:</strong> ${mobilenumber}</p>
+        <p><strong>Mobile Number:</strong> ${mobilenumber}</p>
+        <p><strong>Email:</strong> ${email}</p>
         <p><strong>Password:</strong> ${password}</p>
                 
         <p>We’re committed to supporting you every step of the way. Let’s work together to create a great experience for your customers!</p>
         <p>Best Regards,</p>
-        <p><strong>Support Team</strong><br>Nithyaevent<br><a href="mailto:support@nithyaevents.com">support@nithyaevents.com</a> | 99801370001</p>
+        <p><strong>Support Team</strong><br>Nithyaevent<br><a href="mailto:support@nithyaevents.com">support@nithyaevents.com</a> | 9980137001</p>
         <p>&copy; 2024 All Rights Reserved, Nithyaevent<br>Designed & Developed by Kadagam Ventures Private Limited</p>
       </body>
       </html>

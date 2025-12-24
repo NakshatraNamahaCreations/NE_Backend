@@ -229,9 +229,7 @@ router.post(
     { name: 'video', maxCount: 1 },
   ]),
   uploadToS3Edit,
-  (req, res, next) => {
-    // Your update logic here
-  },
+  editProduct,
   (err, req, res, next) => {
     if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
