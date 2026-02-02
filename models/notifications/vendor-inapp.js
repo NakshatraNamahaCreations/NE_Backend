@@ -20,4 +20,4 @@ module.exports = mongoose.model("vendor-inapp", vendorInApp);
 // vendor id, product id,apprval message, read status,create at
 
 // user order
-// user id, vendor id, product id,order id,
+// user id, vendor id, product id, order id,

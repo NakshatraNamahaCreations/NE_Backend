@@ -6,6 +6,81 @@ const crypto = require("crypto");
 const otpSchema = require("../../models/otp/otp");
 const { sendOTP, sendResetMessage } = require("../../utils/sendMail");
 
+// exports.updateFcmToken = async (req, res) => {
+//   try {
+//     // FIX: Read vendorId from body since req.user is undefined
+//     const { fcmToken, vendorId } = req.body;
+
+//     if (!fcmToken) {
+//       console.log("fcmToken required",)
+//       return res.status(400).json({ message: "fcmToken required" });
+//     }
+
+//     if (!vendorId) {
+//       return res.status(400).json({ message: "vendorId required" });
+//     }
+
+//     const updatedVendor = await vendorSchema.findByIdAndUpdate(
+//       vendorId,
+//       { fcmToken, fcmUpdatedAt: new Date() },
+//       { new: true }
+//     );
+
+//     if (!updatedVendor) {
+//       return res.status(404).json({ message: "Vendor not found" });
+//     }
+
+//     return res.status(200).json({ status: true, message: "FCM token saved" });
+//   } catch (e) {
+//     console.error("updateFcmToken error:", e);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+exports.updateFcmToken = async (req, res) => {
+  try {
+    const { fcmToken, vendorId } = req.body;
+
+    // 1. vendorId is always required to find the user
+    if (!vendorId) {
+      return res.status(400).json({ message: "vendorId required" });
+    }
+
+    // 2. THE FIX: Check if fcmToken was sent in the request at all.
+    // Use 'undefined' check so that 'null' is allowed to pass through.
+    if (typeof fcmToken === 'undefined') {
+      return res.status(400).json({ message: "fcmToken field is required (send null to clear)" });
+    }
+
+    // 3. Update the database. 
+    // If fcmToken is "abc", it saves "abc". 
+    // If fcmToken is null, it saves null.
+    const updatedVendor = await vendorSchema.findByIdAndUpdate(
+      vendorId,
+      {
+        fcmToken: fcmToken,
+        fcmUpdatedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!updatedVendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    // Return a message based on what happened
+    const isLogout = fcmToken === null;
+    return res.status(200).json({
+      status: true,
+      message: isLogout ? "Token cleared successfully" : "Token updated successfully"
+    });
+
+  } catch (e) {
+    console.error("updateFcmToken error:", e);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.vendorRegister = async (req, res) => {
   try {
     const {

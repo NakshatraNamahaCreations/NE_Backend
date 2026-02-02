@@ -1,5 +1,8 @@
 const productSchema = require("../../models/vendor/product");
 const notificationSchema = require("../../models/notifications/vendor-inapp");
+const sendPushNotification = require("../../utils/sendPushNotification")
+const vendorAuthSchema = require("../../models/vendor/vendor")
+
 exports.addProduct = async (req, res) => {
   try {
     if (!req.body.product_image || !Array.isArray(req.body.product_image)) {
@@ -648,15 +651,24 @@ exports.approveProduct = async (req, res) => {
     }
     findProduct.approval_status = "Approved";
     await findProduct.save();
+    const bodyContent = `Your product ${findProduct.product_name} has been approved.`;
+    const title = "Product Approve Status";
     await notificationSchema.create({
       vendor_id: findProduct.vendor_id, // Assuming the product has a vendor_id field
       product_id: productId,
       notification_type: "product_approval",
       message: `Your product "${findProduct.product_name}" has been approved.`,
       status: "unread",
-      metadata: {}, // Add additional metadata if needed
+      metadata: {},
       created_at: new Date(),
     });
+    const vendor = await vendorAuthSchema
+      .findById(findProduct.vendor_id)
+      .select("fcmToken");
+
+    if (vendor?.fcmToken) {
+      await sendPushNotification(vendor.fcmToken, title, bodyContent);
+    }
     res.status(200).json({
       message: "Product approved successfully",
       approval_status: findProduct.approval_status,
@@ -680,6 +692,8 @@ exports.disApproveProduct = async (req, res) => {
     findProduct.isActive = false;
     findProduct.reason_for_disapprove = reason_for_disapprove;
     await findProduct.save();
+    const bodyContent = `Your product ${findProduct.product_name} has been disapproved.`;
+    const title = "Product Approve Status";
     await notificationSchema.create({
       vendor_id: findProduct.vendor_id, // Assuming the product has a vendor_id field
       product_id: productId,
@@ -689,6 +703,13 @@ exports.disApproveProduct = async (req, res) => {
       metadata: {}, // Add additional metadata if needed
       created_at: new Date(),
     });
+    const vendor = await vendorAuthSchema
+      .findById(findProduct.vendor_id)
+      .select("fcmToken");
+
+    if (vendor?.fcmToken) {
+      await sendPushNotification(vendor.fcmToken, title, bodyContent);
+    }
     res
       .status(200)
       .json({ message: "Product disapproved successfully", findProduct });

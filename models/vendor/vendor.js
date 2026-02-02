@@ -85,6 +85,8 @@ const vendorSchema = new mongoose.Schema({
   website_url: String,
   commission_percentage: Number,
   commission_tax: Number,
+  fcmToken: { type: String, default: null },
+  fcmUpdatedAt: { type: Date },
   business_hours: [
     {
       day: String,

@@ -4,7 +4,6 @@ const express = require('express');
 const moment = require('moment');
 const router = express.Router();
 const fs = require('fs');
-const { Buffer } = require('buffer');
 
 router.post('/generate-delivery-challan', (req, res, next) => {
   res.set('Content-Encoding', 'identity');
@@ -110,13 +109,7 @@ router.post('/generate-delivery-challan', (req, res, next) => {
 </body>
 </html>`
     const browser = await puppeteer.launch({
-      headless: "new",
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-      ],
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 
     const page = await browser.newPage();
@@ -124,22 +117,25 @@ router.post('/generate-delivery-challan', (req, res, next) => {
     await page.setContent(html, {
       waitUntil: ['networkidle0', 'domcontentloaded'],
     });
-    const pdfData = await page.pdf({
+    const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
       margin: { top: '10px', bottom: '10px', left: '10px', right: '10px' },
     });
 
-    const pdfBuffer = Buffer.isBuffer(pdfData) ? pdfData : Buffer.from(pdfData);
-    const base64Pdf = pdfBuffer.toString('base64');
-
     await browser.close();
 
-    console.log('pdfData type:', typeof pdfData);
-    console.log('pdfData constructor:', pdfData?.constructor?.name); // should show Uint8Array
-    console.log('Buffer.isBuffer(pdfBuffer):', Buffer.isBuffer(pdfBuffer)); // true
-    console.log('Base64 starts with:', base64Pdf.slice(0, 10)); // ✅ JVBERi0xLj
-    console.log('Raw buffer (first 4 bytes):', pdfBuffer.subarray(0, 4)); // [37,80,68,70]
+    // Optional: Save for debugging
+    // fs.writeFileSync('test_server.pdf', pdfBuffer);
+
+    const base64Pdf = pdfBuffer.toString('base64');
+
+    // Debug: Ensure it starts with valid PDF signature in Base64
+    // PDF magic number: "%PDF" → Base64 starts with "JVBERi"
+    console.log('Base64 starts with:', base64Pdf.substring(0, 10));
+    // Should log: JVBERi0xLj...
+
+    console.log('Raw buffer (first 4 bytes):', pdfBuffer.subarray(0, 4));
 
     res.json({
       success: true,

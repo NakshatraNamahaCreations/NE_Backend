@@ -36,6 +36,7 @@ const {
   verifyOTP,
   resetPassword,
   resendEmailOTP,
+  updateFcmToken,
 } = require("../../controllers/vendor/vendorController");
 const multer = require("multer");
 const path = require("path");
@@ -200,6 +201,7 @@ router.put(
   updateVendorProfile
 );
 router.post("/login-with-gmail", vendorLoginWithGmail);
+router.put("/fcm-token", updateFcmToken);
 router.put(
   "/add-service-user-business-details/:id",
   upload.fields([
