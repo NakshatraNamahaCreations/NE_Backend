@@ -1,5 +1,8 @@
 const payoutSchema = require("../../models/payouts/payout");
 const notificationSchema = require("../../models/notifications/vendor-inapp");
+const sendPushNotification = require("../../utils/sendPushNotification")
+const vendorAuthSchema = require("../../models/vendor/vendor")
+
 
 exports.addPayout = async (req, res) => {
   try {
@@ -52,6 +55,15 @@ exports.addPayout = async (req, res) => {
       metadata: { event_id }, // Add additional metadata if needed
       created_at: new Date(),
     });
+    const title = "Payment Initiated";
+    const bodyContent = `Your payment of Rs.${payout_amount}/- for event ${event_name} is being Initiated.`;
+    const vendor = await vendorAuthSchema
+      .findById(seller_id)
+      .select("fcmToken");
+
+    if (vendor?.fcmToken) {
+      await sendPushNotification(vendor.fcmToken, title, bodyContent);
+    }
     res.status(200).json({
       message: "Initialized",
       data: newPayout,
@@ -103,6 +115,15 @@ exports.confirmPayoutProcessed = async (req, res) => {
       metadata: { event_name }, // Add additional metadata if needed
       created_at: new Date(),
     });
+    const title = "Payment processed";
+    const bodyContent = `Your payment of Rs.${payout_amount}/- for event ${event_name} is being processed.`;
+    const vendor = await vendorAuthSchema
+      .findById(seller_id)
+      .select("fcmToken");
+
+    if (vendor?.fcmToken) {
+      await sendPushNotification(vendor.fcmToken, title, bodyContent);
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

@@ -1,4 +1,6 @@
 const UserOrder = require("../../models/user/Order");
+const sendPushNotification = require("../../utils/sendPushNotification")
+const vendorAuthSchema = require("../../models/vendor/vendor")
 
 const notificationSchema = require("../../models/notifications/vendor-inapp");
 const { default: axios } = require("axios");
@@ -256,7 +258,17 @@ exports.userOrder = async (req, res) => {
         status: "unread",
         created_at: new Date(),
       };
+
       await notificationSchema.create(productNotification);
+      const title = "Product has been booked";
+      const bodyContent = `Your product ${product.productName} has been booked for the ${event_name} from ${event_date}.`;
+      const vendor = await vendorAuthSchema
+        .findById(product.sellerId)
+        .select("fcmToken");
+
+      if (vendor?.fcmToken) {
+        await sendPushNotification(vendor.fcmToken, title, bodyContent);
+      }
     }
     for (const service of parsedServiceData) {
       const serviceNotification = {
@@ -269,6 +281,15 @@ exports.userOrder = async (req, res) => {
         created_at: new Date(),
       };
       await notificationSchema.create(serviceNotification);
+      const title = "Service has been booked";
+      const bodyContent = `Your Service ${service.productName} has been booked for the ${event_name} from ${event_date}.`;
+      const vendor = await vendorAuthSchema
+        .findById(service.sellerId)
+        .select("fcmToken");
+
+      if (vendor?.fcmToken) {
+        await sendPushNotification(vendor.fcmToken, title, bodyContent);
+      }
     }
     // mail the user with the order details
     const deliveryMessage = `Dear ${user_name}, Thank you for your purchase! We're excited to confirm that we've received your order #{#var#}. Your order is being processed and we’ll notify you once it’s on its way. Order Details: Order Number: {#var#} Items Ordered: {#var#} – {#var#} – {#var#} {#var#} –{#var#} – {#var#} {#var#} Billing Information: Billing Name: {#var#} Billing Address: {#var#} Shipping Information: Shipping Address: {#var#} Shipping Method: {#var#} Estimated Delivery Date: {#var#} If you have any questions or need to make changes, feel free to reach out to our customer support at Support@nithyaevents.com. We’re here to help! Thank you for choosing NithyaEvent. We hope you have the best experience! Best regards, NithyaEvent Support@nithyaevents.com www.nithyaevent.com`;

@@ -1,5 +1,8 @@
 const addServiceSchema = require("../../models/vendor/add-service");
 const notificationSchema = require("../../models/notifications/vendor-inapp");
+const sendPushNotification = require("../../utils/sendPushNotification")
+const vendorAuthSchema = require("../../models/vendor/vendor")
+
 
 exports.addVendorService = async (req, res) => {
   try {
@@ -306,6 +309,7 @@ exports.approveServices = async (req, res) => {
     }
     findServices.approval_status = "Approved";
     await findServices.save();
+
     await notificationSchema.create({
       vendor_id: findServices.vendor_id, // Assuming the Services has a vendor_id field
       Services_id: servicesId,
@@ -315,6 +319,15 @@ exports.approveServices = async (req, res) => {
       metadata: {}, // Add additional metadata if needed
       created_at: new Date(),
     });
+    const bodyContent = `Your Services ${findServices.service_name} has been approved.`;
+    const title = "Service Approve Status";
+    const vendor = await vendorAuthSchema
+      .findById(findServices.vendor_id)
+      .select("fcmToken");
+    if (vendor?.fcmToken) {
+      await sendPushNotification(vendor.fcmToken, title, bodyContent);
+    }
+
     res.status(200).json({
       message: "Services approved successfully",
       approval_status: findServices.approval_status,
@@ -347,6 +360,14 @@ exports.disApproveService = async (req, res) => {
       metadata: {}, // Add additional metadata if needed
       created_at: new Date(),
     });
+    const bodyContent = `Your Services ${findService.service_name} has been disapproved.`;
+    const title = "Service Approve Status";
+    const vendor = await vendorAuthSchema
+      .findById(findService.vendor_id)
+      .select("fcmToken");
+    if (vendor?.fcmToken) {
+      await sendPushNotification(vendor.fcmToken, title, bodyContent);
+    }
     res
       .status(200)
       .json({ message: "Product disapproved successfully", findService });
