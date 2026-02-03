@@ -76,6 +76,11 @@ const vendorSchema = new mongoose.Schema({
   vehicle_image: String,
   vehicle_by: String,
   is_approved: Boolean,
+  review_status: {
+    type: String,
+    enum: ['Under Review', 'Approved', 'Disapproved'],
+    default: 'Under Review'
+  },
   reason_for_disapprove: String,
   isActive: Boolean,
   // requirement_fields: Array,

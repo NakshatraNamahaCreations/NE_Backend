@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const { default: mongoose } = require("mongoose");
 const crypto = require("crypto");
 const otpSchema = require("../../models/otp/otp");
-const { sendOTP, sendResetMessage } = require("../../utils/sendMail");
+const { sendProfileReviewStatus, sendOTP, sendResetMessage } = require("../../utils/sendMail");
 
 // exports.updateFcmToken = async (req, res) => {
 //   try {
@@ -125,6 +125,7 @@ exports.vendorRegister = async (req, res) => {
       ifsc_code,
       bank_branch_name,
       is_approved: false,
+      review_status: "Under Review",
       commission_percentage: 22,
       commission_tax: 18,
       profession_type,
@@ -844,11 +845,23 @@ exports.vendorApprove = async (req, res) => {
       return res.status(404).json({ message: "vendor not found" });
     }
     findVendor.is_approved = true;
-    await findVendor.save();
+    findVendor.review_status = "Approved",
+      await findVendor.save();
     res.status(200).json({
       message: "vendor approved successfully",
       approval_status: findVendor.is_approved,
+      review_status: 'Approved',
     });
+    try {
+      await sendProfileReviewStatus({
+        email: findVendor.email,
+        username: findVendor.vendor_name || "Vendor",
+        review_status: "Approved",
+      });
+    } catch (mailErr) {
+      console.error("Review Status email error:", mailErr.message);
+      // ✅ do not return res here (response not yet sent? but still avoid crashing)
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -866,6 +879,7 @@ exports.vendorDisapprove = async (req, res) => {
     }
     findVendor.is_approved = false;
     findVendor.isActive = false;
+    findVendor.review_status = "Disapproved";
     findVendor.reason_for_disapprove = reason_for_disapprove;
     await findVendor.save();
     res.status(200).json({
@@ -873,7 +887,19 @@ exports.vendorDisapprove = async (req, res) => {
       approval_status: findVendor.is_approved,
       reason_for_disapprove: findVendor.reason_for_disapprove,
       isActive: findVendor.isActive,
+      review_status: findVendor.review_status,
     });
+    try {
+      await sendProfileReviewStatus({
+        email: findVendor.email,
+        username: findVendor.vendor_name || "Vendor",
+        review_status: "Disapproved",
+        reason: findVendor.reason_for_disapprove,
+      });
+    } catch (mailErr) {
+      console.error("Review Status email error:", mailErr.message);
+      // ✅ do not return res here (response not yet sent? but still avoid crashing)
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
