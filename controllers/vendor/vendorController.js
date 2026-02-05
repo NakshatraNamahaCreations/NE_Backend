@@ -818,6 +818,7 @@ exports.addAddress = async (req, res) => {
       status: true,
       success: "Address saved successfully",
       data: vendor.address,
+      vendorId: vendor._id
     });
   } catch (error) {
     console.log("error", error);
