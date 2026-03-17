@@ -247,7 +247,7 @@ exports.addServiceUserBusinessDetails = async (req, res) => {
       website_url,
       gst_number,
       pricing,
-      // business_hours,
+      pan_number,
       shop_name,
     } = req.body;
 
@@ -263,7 +263,7 @@ exports.addServiceUserBusinessDetails = async (req, res) => {
         website_url: website_url,
         pricing: pricing,
         gst_number: gst_number,
-        // business_hours: parsedBusinessHours,
+        pan_number: pan_number,
         experience_in_business: experience_in_business,
         shop_image_or_logo: req.body.shop_image_or_logo,
         aadhaar_front: req.body.aadhaar_front,
