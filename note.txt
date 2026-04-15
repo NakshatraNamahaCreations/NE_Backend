@@ -1,0 +1,3 @@
+i want one api to add products with below demo details.
+product_type: "Selling" , product_name:"Led parcan light", product_image:(6 images), product_video:(one video), product_category: "Sound", and so on...,
+specifications:[{specification_name: }]
