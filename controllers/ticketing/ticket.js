@@ -59,7 +59,10 @@ exports.getAllTickets = async (req, res) => {
 
 exports.getTicketById = async (req, res) => {
   try {
-    const ticket = await ticketSchema.find({ user_id: req.params.id }).sort({ ticket_created_date: -1 });
+    const ticket = await ticketSchema
+      .find({ user_id: req.params.id })
+      .sort({ _id: -1 });
+    // .sort({ ticket_created_date: -1 });
     if (!ticket) {
       return res.status(404).json({ message: "ticket not found" });
     } else {
