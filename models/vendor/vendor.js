@@ -17,7 +17,7 @@ const addressSchema = new mongoose.Schema(
     longitude: Number,
     directions: String,
   },
-  { _id: true },
+  { _id: true }
 );
 
 const requirementFieldSchema = new mongoose.Schema({
@@ -69,23 +69,17 @@ const vendorSchema = new mongoose.Schema({
   shop_image_or_logo: String,
   aadhaar_front: String,
   aadhaar_back: String,
-  aadhaar_number: String,
   gst_number: String,
   pan_number: String,
-  pan_front: String,
-  pan_back: String,
   vehicle_name: String,
   number_plate: String,
   vehicle_image: String,
   vehicle_by: String,
   is_approved: Boolean,
-  review_status: {
-    type: String,
-    enum: ["Under Review", "Approved", "Disapproved"],
-    default: "Under Review",
-  },
   reason_for_disapprove: String,
   isActive: Boolean,
+  // Soft-delete flag: admin "delete" hides the record without removing it.
+  isDeleted: { type: Boolean, default: false },
   // requirement_fields: Array,
   pricing: Number,
   experience_in_business: String,
@@ -93,8 +87,6 @@ const vendorSchema = new mongoose.Schema({
   website_url: String,
   commission_percentage: Number,
   commission_tax: Number,
-  fcmToken: { type: String, default: null },
-  fcmUpdatedAt: { type: Date },
   business_hours: [
     {
       day: String,

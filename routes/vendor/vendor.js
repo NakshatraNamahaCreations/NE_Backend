@@ -5,11 +5,11 @@ const { Upload } = require("@aws-sdk/lib-storage");
 const router = express.Router();
 const {
   vendorRegister,
-  // editProfilePicture,
+  editProfilePicture,
   addVendorBusinessDetails,
   vendorLoginWithGmail,
   getVendorProfile,
-  updateVendorProfile,
+  // updateVendorProfile,
   deleteVendorProfile,
   addAddress,
   getAllVendor,
@@ -36,7 +36,8 @@ const {
   verifyOTP,
   resetPassword,
   resendEmailOTP,
-  updateFcmToken,
+  downloadVendorDocuments,
+  downloadVendorDocument,
 } = require("../../controllers/vendor/vendorController");
 const multer = require("multer");
 const path = require("path");
@@ -120,14 +121,6 @@ const uploadToS3 = async (req, res, next) => {
     req.body.aadhaar_back = uploadedFiles.aadhaar_back
       ? uploadedFiles.aadhaar_back[0]
       : null;
-
-    req.body.pan_front = uploadedFiles.pan_front
-      ? uploadedFiles.pan_front[0]
-      : null;
-
-    req.body.pan_back = uploadedFiles.pan_back
-      ? uploadedFiles.pan_back[0]
-      : null;
     next();
   } catch (error) {
     console.error("Upload error:", error);
@@ -181,48 +174,31 @@ const uploadToS3ForAdditionalImages = async (req, res, next) => {
 
 router.post("/refresh-token", refreshToken);
 router.post("/register", vendorRegister);
-// router.put(
-//   "/edit-vendor-profile/:id",
-//   upload.fields([{ name: "shop_image_or_logo", maxCount: 1 }]),
-//   uploadToS3,
-//   editProfilePicture
-// );
+router.put(
+  "/edit-vendor-profile/:id",
+  upload.fields([{ name: "shop_image_or_logo", maxCount: 1 }]),
+  uploadToS3,
+  editProfilePicture
+);
 router.put(
   "/add-vendor-business-details/:id",
   upload.fields([
     { name: "shop_image_or_logo", maxCount: 1 },
     { name: "aadhaar_front", maxCount: 1 },
     { name: "aadhaar_back", maxCount: 1 },
-    { name: "pan_front", maxCount: 1 },
-    { name: "pan_back", maxCount: 1 },
     { name: "vehicle_image", maxCount: 1 }, //vendor profile
   ]),
   uploadToS3,
   addVendorBusinessDetails
 );
-router.put(
-  "/edit-vendor-profile/:id",
-  upload.fields([
-    { name: "shop_image_or_logo", maxCount: 1 },
-    { name: "aadhaar_front", maxCount: 1 },
-    { name: "aadhaar_back", maxCount: 1 },
-    { name: "pan_front", maxCount: 1 },
-    { name: "pan_back", maxCount: 1 },
-    { name: "vehicle_image", maxCount: 1 },
-  ]),
-  uploadToS3,
-  updateVendorProfile
-);
+
 router.post("/login-with-gmail", vendorLoginWithGmail);
-router.put("/fcm-token", updateFcmToken);
 router.put(
   "/add-service-user-business-details/:id",
   upload.fields([
     { name: "shop_image_or_logo", maxCount: 1 },
     { name: "aadhaar_front", maxCount: 1 },
     { name: "aadhaar_back", maxCount: 1 },
-    { name: "pan_front", maxCount: 1 },
-    { name: "pan_back", maxCount: 1 },
   ]), //vendor profile
   uploadToS3,
   addServiceUserBusinessDetails
@@ -237,6 +213,10 @@ router.get("/get-service-vendor", getOnlyServiceVendor);
 
 router.get("/filterout-vendors/:id", getAllFilteroutVendor);
 router.get("/get-vendor-by-servicename/:name", getVendorByServiceName);
+
+// Document downloads (server-side proxy — S3 has no CORS for browser fetch)
+router.get("/download-documents/:id", downloadVendorDocuments);
+router.get("/download-document/:id/:field", downloadVendorDocument);
 router.delete("/delete-vendor-profile", deleteVendorProfile);
 router.put("/add-address/:id", addAddress);
 router.put(

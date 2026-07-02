@@ -30,12 +30,10 @@ const seedConfig = async () => {
 
 // Connect to MongoDB
 mongoose
-  .connect(process.env.MONGO_URI,
-    //   {
-    //   useNewUrlParser: true,
-    //   useUnifiedTopology: true,
-    // }
-  )
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("Database Connected........."))
   .catch((err) => console.log("Database Not Connected!!!", err));
 
@@ -70,7 +68,6 @@ const serviceEnquiry = require("./routes/vendor/service-enquiry");
 const userPayemt = require("./routes/payment/payment");
 const addOnsForService = require("./routes/vendor/addons");
 const generateInvoice = require("./routes/payouts/generate-invoice");
-const deliveryChallan = require("./utils/generatePdf");
 
 const { default: axios } = require("axios");
 // Middleware
@@ -112,7 +109,6 @@ app.use("/api/enquiry", serviceEnquiry);
 app.use("/api/payment", userPayemt);
 app.use("/api/addons", addOnsForService);
 app.use("/api/invoice", generateInvoice);
-app.use("/api/challan", deliveryChallan);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
@@ -143,8 +139,6 @@ app.get("/api/latest-version", async (req, res) => {
     res.json({
       version: config.version,
       forceUpdate: config.forceUpdate,
-      // If you want to force users to update, set "forceUpdate": true.
-      // If you only want to notify them, set "forceUpdate": false.
     });
   } catch (error) {
     console.error("Error fetching latest version:", error);

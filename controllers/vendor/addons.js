@@ -44,57 +44,23 @@ exports.getAllAddons = async (req, res) => {
 };
 
 exports.getAddOnsByVendorId = async (req, res) => {
-  const { vendor_id, category } = req.query;
-
+  const vendor_id = req.query.vendor_id;
+  const category = req.query.category;
   try {
-    if (!vendor_id) {
-      return res.status(400).json({ message: "vendor_id is required" });
+    const addOns = await addOnsSchema
+      .find({
+        vendor_id,
+        category,
+      })
+      .sort({ _id: -1 });
+    if (!addOns) {
+      console.log("addon's not found");
+      return res.status(404).json({ message: "addon's not found" });
     }
-
-    const query = { vendor_id };
-
-    if (category) {
-      query.category = { $regex: new RegExp(category, "i") };
-    }
-
-    const addOns = await addOnsSchema.find(query).sort({ _id: -1 });
-
-    if (!addOns || addOns.length === 0) {
-      return res.status(404).json({ message: "add-ons not found" });
-    }
-
     return res.status(200).json({ addOns });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
-  }
-};
-
-exports.editAddons = async (req, res) => {
-  try {
-    const itemId = req.params.id;
-    const existingItem = await addOnsSchema.findById(itemId);
-
-    if (!existingItem) {
-      return res.status(404).json({ message: "Addon not found" });
-    }
-
-    const { category, service_name, price } = req.body;
-
-    existingItem.category = category || existingItem.category;
-    existingItem.service_name = service_name || existingItem.service_name;
-    existingItem.price = price || existingItem.price;
-
-    const updateAddons = await existingItem.save();
-
-    res.status(200).json({
-      message: "Details updated successfully",
-      status: true,
-      data: updateAddons,
-    });
-  } catch (error) {
-    console.error("Edit Addmons Error:", error);
-    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -109,7 +75,7 @@ exports.deleteAddOns = async (req, res) => {
     }
     return res
       .status(200)
-      .json({ status: true, success: "Deleted successfully" });
+      .send({ status: true, success: "Deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

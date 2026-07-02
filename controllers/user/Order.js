@@ -1,6 +1,4 @@
 const UserOrder = require("../../models/user/Order");
-const sendPushNotification = require("../../utils/sendPushNotification")
-const vendorAuthSchema = require("../../models/vendor/vendor")
 
 const notificationSchema = require("../../models/notifications/vendor-inapp");
 const { default: axios } = require("axios");
@@ -69,9 +67,7 @@ const sendUserOrderEmail = async (
       name: "Nithyaevent",
       email: "nithyaevents24@gmail.com",
     },
-    to: [{ email: email, name: user_name },
-    { email: "support@nithyaevents.com", name: "Nithyaevent Admin" }
-    ],
+    to: [{ email: email, name: user_name }],
     subject: "Booking Confirmation - Nithyaevent",
     htmlContent: `
       <!DOCTYPE html>
@@ -258,17 +254,7 @@ exports.userOrder = async (req, res) => {
         status: "unread",
         created_at: new Date(),
       };
-
       await notificationSchema.create(productNotification);
-      const title = "Product has been booked";
-      const bodyContent = `Your product ${product.productName} has been booked for the ${event_name} from ${event_date}.`;
-      const vendor = await vendorAuthSchema
-        .findById(product.sellerId)
-        .select("fcmToken");
-
-      if (vendor?.fcmToken) {
-        await sendPushNotification(vendor.fcmToken, title, bodyContent);
-      }
     }
     for (const service of parsedServiceData) {
       const serviceNotification = {
@@ -281,34 +267,14 @@ exports.userOrder = async (req, res) => {
         created_at: new Date(),
       };
       await notificationSchema.create(serviceNotification);
-      const title = "Service has been booked";
-      const bodyContent = `Your Service ${service.productName} has been booked for the ${event_name} from ${event_date}.`;
-      const vendor = await vendorAuthSchema
-        .findById(service.sellerId)
-        .select("fcmToken");
-
-      if (vendor?.fcmToken) {
-        await sendPushNotification(vendor.fcmToken, title, bodyContent);
-      }
     }
     // mail the user with the order details
     const deliveryMessage = `Dear ${user_name}, Thank you for your purchase! We're excited to confirm that we've received your order #{#var#}. Your order is being processed and we’ll notify you once it’s on its way. Order Details: Order Number: {#var#} Items Ordered: {#var#} – {#var#} – {#var#} {#var#} –{#var#} – {#var#} {#var#} Billing Information: Billing Name: {#var#} Billing Address: {#var#} Shipping Information: Shipping Address: {#var#} Shipping Method: {#var#} Estimated Delivery Date: {#var#} If you have any questions or need to make changes, feel free to reach out to our customer support at Support@nithyaevents.com. We’re here to help! Thank you for choosing NithyaEvent. We hope you have the best experience! Best regards, NithyaEvent Support@nithyaevents.com www.nithyaevent.com`;
     const ordered_date = new Date();
-    const formattedDate = ordered_date.toLocaleString("en-IN", {
-      weekday: "short",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-      timeZone: "Asia/Kolkata",
-    });
     try {
       await sendUserOrderEmail(
         orderId,
-        formattedDate,
+        ordered_date,
         paid_amount,
         user_name,
         user_mailid
@@ -393,8 +359,7 @@ exports.getSellerProducts = async (req, res) => {
         const filteredProducts = order.product_data.filter(
           (product) => product.sellerId === sellerId
         );
-        const returnTechnicianBasedOnSellerId = order.tech_data.length > 0 ?
-          order.tech_data.filter((ele) => ele.vendor_id === sellerId) : []
+
         // Normalize the order_status from frontend and from DB to lowercase
         const normalizedStatus = order_status?.trim().toLowerCase();
 
@@ -420,7 +385,6 @@ exports.getSellerProducts = async (req, res) => {
             eventEndDate: order.event_end_date,
             setupStartDate: order.setup_start_date,
             setupEndDate: order.setup_end_date,
-            technicianData: returnTechnicianBasedOnSellerId,
           };
         }
 
@@ -522,8 +486,6 @@ exports.getServiceOrders = async (req, res) => {
             service_data: filteredService,
             eventStartDate: order.event_start_date,
             eventEndDate: order.event_end_date,
-            setupStartDate: order.setup_start_date,
-            setupEndDate: order.setup_end_date,
           };
         }
 

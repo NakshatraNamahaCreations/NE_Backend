@@ -39,13 +39,11 @@ const s3 = new S3Client({
   },
 });
 
-// 50 MB = 52,428,800 bytes
-const MAX_VIDEO_SIZE_MB = 50;
-const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 52428800
+const storage = multer.memoryStorage();
 
 const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: MAX_VIDEO_SIZE_BYTES }, // 50MB limit
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
 
 // const uploadToS3 = async (req, res, next) => {
@@ -140,11 +138,11 @@ const uploadToS3Add = async (req, res, next) => {
 const uploadToS3Edit = async (req, res, next) => {
   try {
     if (!req.files || Object.keys(req.files).length === 0) {
+      // No new files uploaded — keep existing images & video
       return next();
     }
 
     const uploadedFiles = {};
-
     for (const [key, files] of Object.entries(req.files)) {
       uploadedFiles[key] = await Promise.all(
         files.map(async (file) => {
@@ -154,24 +152,31 @@ const uploadToS3Edit = async (req, res, next) => {
             Body: file.buffer,
             ContentType: file.mimetype,
           };
-          const uploader = new Upload({ client: s3, params: uploadParams });
+
+          const uploader = new Upload({
+            client: s3,
+            params: uploadParams,
+          });
+
           await uploader.done();
           return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
         })
       );
     }
 
-    // Attach new uploaded URLs
-    req.body.product_image = uploadedFiles.images || [];
-    req.body.product_video = uploadedFiles.video ? uploadedFiles.video[0] : undefined;
+    req.body.product_image = uploadedFiles.images || undefined;
+    req.body.product_video = uploadedFiles.video
+      ? uploadedFiles.video[0]
+      : undefined;
 
     next();
-  } catch (err) {
-    console.error("Upload error:", err);
-    return res.status(500).json({ error: "File upload failed", details: err.message });
+  } catch (error) {
+    console.error("Upload error:", error);
+    res
+      .status(500)
+      .json({ error: "File upload failed", details: error.message });
   }
 };
-
 
 router.post(
   "/addproduct",
@@ -212,32 +217,14 @@ router.delete("/delete-product/:id", deleteProduct);
 router.post("/add-products-via-excel", addProductsViaExcel);
 router.post("/search-product", searchProduct);
 
-// router.post(
-//   "/edit-product/:id",
-// upload.fields([
-//   { name: "images", maxCount: 6 },
-//   { name: "video", maxCount: 1 },
-// ]),
-//   uploadToS3Edit,
-//   editProduct
-// );
-
-router.post(
-  '/edit-product/:id',
+router.put(
+  "/edit-product/:id",
   upload.fields([
-    { name: 'images', maxCount: 6 },
-    { name: 'video', maxCount: 1 },
+    { name: "images", maxCount: 6 },
+    { name: "video", maxCount: 1 },
   ]),
   uploadToS3Edit,
-  editProduct,
-  (err, req, res, next) => {
-    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({
-        message: `File is too large. Maximum allowed size is ${MAX_VIDEO_SIZE_MB} MB.`,
-      });
-    }
-    next(err);
-  }
+  editProduct
 );
 
 // admin

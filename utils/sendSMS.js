@@ -8,7 +8,6 @@ const ENTITY_ID = process.env.ENTITY_ID;
 const AIRTLE_URL = "https://iqsms.airtel.in/api/v1/send-sms";
 const AUTH_HEADDER = process.env.BASE64_AUTH;
 
-
 exports.sendSMS = async (mobilenumber, message, SMS_TYPE) => {
   try {
     // Define the payload

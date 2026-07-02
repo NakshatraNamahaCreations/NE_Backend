@@ -4,80 +4,111 @@ const jwt = require("jsonwebtoken");
 const { default: mongoose } = require("mongoose");
 const crypto = require("crypto");
 const otpSchema = require("../../models/otp/otp");
-const { sendProfileReviewStatus, sendOTP, sendResetMessage } = require("../../utils/sendMail");
+const { sendOTP, sendResetMessage } = require("../../utils/sendMail");
+const axios = require("axios");
+const JSZip = require("jszip");
 
-// exports.updateFcmToken = async (req, res) => {
-//   try {
-//     // FIX: Read vendorId from body since req.user is undefined
-//     const { fcmToken, vendorId } = req.body;
+// Vendor document image fields, with friendly filenames for downloads.
+const VENDOR_DOC_FIELDS = [
+  { field: "aadhaar_front", label: "Aadhaar_Front" },
+  { field: "aadhaar_back", label: "Aadhaar_Back" },
+  { field: "pan_front", label: "PAN_Front" },
+  { field: "pan_back", label: "PAN_Back" },
+  { field: "shop_image_or_logo", label: "Shop_Image" },
+  { field: "vehicle_image", label: "Vehicle_Image" },
+];
 
-//     if (!fcmToken) {
-//       console.log("fcmToken required",)
-//       return res.status(400).json({ message: "fcmToken required" });
-//     }
+const extFromUrl = (url) => {
+  const m = String(url || "")
+    .split("?")[0]
+    .match(/\.(jpe?g|png|gif|webp|pdf)$/i);
+  return m ? m[1].toLowerCase() : "jpg";
+};
 
-//     if (!vendorId) {
-//       return res.status(400).json({ message: "vendorId required" });
-//     }
+const safeName = (str) =>
+  String(str || "vendor").replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "") ||
+  "vendor";
 
-//     const updatedVendor = await vendorSchema.findByIdAndUpdate(
-//       vendorId,
-//       { fcmToken, fcmUpdatedAt: new Date() },
-//       { new: true }
-//     );
-
-//     if (!updatedVendor) {
-//       return res.status(404).json({ message: "Vendor not found" });
-//     }
-
-//     return res.status(200).json({ status: true, message: "FCM token saved" });
-//   } catch (e) {
-//     console.error("updateFcmToken error:", e);
-//     return res.status(500).json({ message: "Server error" });
-//   }
-// };
-
-exports.updateFcmToken = async (req, res) => {
+// Download all of a vendor's documents as a single ZIP.
+exports.downloadVendorDocuments = async (req, res) => {
   try {
-    const { fcmToken, vendorId } = req.body;
-
-    // 1. vendorId is always required to find the user
-    if (!vendorId) {
-      return res.status(400).json({ message: "vendorId required" });
-    }
-
-    // 2. THE FIX: Check if fcmToken was sent in the request at all.
-    // Use 'undefined' check so that 'null' is allowed to pass through.
-    if (typeof fcmToken === 'undefined') {
-      return res.status(400).json({ message: "fcmToken field is required (send null to clear)" });
-    }
-
-    // 3. Update the database. 
-    // If fcmToken is "abc", it saves "abc". 
-    // If fcmToken is null, it saves null.
-    const updatedVendor = await vendorSchema.findByIdAndUpdate(
-      vendorId,
-      {
-        fcmToken: fcmToken,
-        fcmUpdatedAt: new Date()
-      },
-      { new: true }
-    );
-
-    if (!updatedVendor) {
+    const vendor = await vendorSchema.findById(req.params.id);
+    if (!vendor) {
       return res.status(404).json({ message: "Vendor not found" });
     }
 
-    // Return a message based on what happened
-    const isLogout = fcmToken === null;
-    return res.status(200).json({
-      status: true,
-      message: isLogout ? "Token cleared successfully" : "Token updated successfully"
+    const zip = new JSZip();
+    let added = 0;
+
+    for (const { field, label } of VENDOR_DOC_FIELDS) {
+      const url = vendor[field];
+      if (!url) continue;
+      try {
+        const resp = await axios.get(url, {
+          responseType: "arraybuffer",
+          timeout: 20000,
+        });
+        zip.file(`${label}.${extFromUrl(url)}`, resp.data);
+        added++;
+      } catch (e) {
+        console.warn(`Failed to fetch ${field} for vendor ${vendor._id}:`, e.message);
+      }
+    }
+
+    if (added === 0) {
+      return res
+        .status(404)
+        .json({ message: "No documents available for this vendor" });
+    }
+
+    const buffer = await zip.generateAsync({ type: "nodebuffer" });
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${safeName(vendor.vendor_name)}_documents.zip"`
+    );
+    return res.send(buffer);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Download a single vendor document (forces a proper file download with the
+// correct name; S3 has no CORS so the browser can't do this directly).
+exports.downloadVendorDocument = async (req, res) => {
+  try {
+    const { id, field } = req.params;
+    const doc = VENDOR_DOC_FIELDS.find((d) => d.field === field);
+    if (!doc) {
+      return res.status(400).json({ message: "Invalid document type" });
+    }
+
+    const vendor = await vendorSchema.findById(id);
+    if (!vendor || !vendor[field]) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    const url = vendor[field];
+    const resp = await axios.get(url, {
+      responseType: "arraybuffer",
+      timeout: 20000,
     });
 
-  } catch (e) {
-    console.error("updateFcmToken error:", e);
-    return res.status(500).json({ message: "Server error" });
+    res.setHeader(
+      "Content-Type",
+      resp.headers["content-type"] || "application/octet-stream"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${safeName(vendor.vendor_name)}_${doc.label}.${extFromUrl(
+        url
+      )}"`
+    );
+    return res.send(resp.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -125,7 +156,6 @@ exports.vendorRegister = async (req, res) => {
       ifsc_code,
       bank_branch_name,
       is_approved: false,
-      review_status: "Under Review",
       commission_percentage: 22,
       commission_tax: 18,
       profession_type,
@@ -194,7 +224,6 @@ exports.addVendorBusinessDetails = async (req, res) => {
       godown_pin,
       gst_number,
       pan_number,
-      aadhaar_number,
       vehicle_name,
       number_plate,
       vehicle_by,
@@ -208,7 +237,6 @@ exports.addVendorBusinessDetails = async (req, res) => {
         godown_pin: godown_pin,
         gst_number: gst_number,
         pan_number: pan_number,
-        aadhaar_number: aadhaar_number,
         vehicle_name: vehicle_name,
         number_plate: number_plate,
         vehicle_by: vehicle_by,
@@ -216,8 +244,6 @@ exports.addVendorBusinessDetails = async (req, res) => {
         vehicle_image: req.body.vehicle_image,
         aadhaar_front: req.body.aadhaar_front,
         aadhaar_back: req.body.aadhaar_back,
-        pan_front: req.body.pan_front,
-        pan_back: req.body.pan_back,
       },
       { new: true }
     );
@@ -251,8 +277,7 @@ exports.addServiceUserBusinessDetails = async (req, res) => {
       website_url,
       gst_number,
       pricing,
-      pan_number,
-      aadhaar_number,
+      // business_hours,
       shop_name,
     } = req.body;
 
@@ -268,14 +293,11 @@ exports.addServiceUserBusinessDetails = async (req, res) => {
         website_url: website_url,
         pricing: pricing,
         gst_number: gst_number,
-        pan_number: pan_number,
-        aadhaar_number: aadhaar_number,
+        // business_hours: parsedBusinessHours,
         experience_in_business: experience_in_business,
         shop_image_or_logo: req.body.shop_image_or_logo,
         aadhaar_front: req.body.aadhaar_front,
         aadhaar_back: req.body.aadhaar_back,
-        pan_front: req.body.pan_front,
-        pan_back: req.body.pan_back,
         // commission_percentage: 22,
         // commission_tax: 18,
       },
@@ -627,7 +649,8 @@ exports.getAllVendor = async (req, res) => {
 
 exports.getAllVendorsForAdmin = async (req, res) => {
   try {
-    const allVendor = await vendorSchema.find();
+    // Exclude soft-deleted vendors.
+    const allVendor = await vendorSchema.find({ isDeleted: { $ne: true } });
     if (allVendor.length > 0) {
       return res.status(200).json(allVendor);
     } else {
@@ -645,6 +668,7 @@ exports.getOnlyProductVendor = async (req, res) => {
       .find({
         profession: "Vendor & Seller",
         is_approved: true,
+        isDeleted: { $ne: true },
       })
       .sort({ _id: -1 });
     if (productVendor.length > 0) {
@@ -664,6 +688,7 @@ exports.getOnlyServiceVendor = async (req, res) => {
       .find({
         profession: { $ne: "Vendor & Seller" },
         is_approved: true,
+        isDeleted: { $ne: true },
       })
       .sort({ _id: -1 });
     if (serviceVendor.length > 0) {
@@ -684,6 +709,7 @@ exports.getVendorByServiceName = async (req, res) => {
       .find({
         profession: req.params.name,
         is_approved: true,
+        isDeleted: { $ne: true },
       })
       .sort({ _id: -1 });
     if (vendorList.length > 0) {
@@ -761,68 +787,56 @@ exports.getServiceReview = async (req, res) => {
 //   }
 // };
 
-exports.updateVendorProfile = async (req, res) => {
-  try {
-    const vendorId = req.params.id;
-    const {
-      gst_number,
-      pan_number,
-      aadhaar_number,
-      shop_image_or_logo,
-      aadhaar_front,
-      aadhaar_back,
-      pan_front,
-      pan_back,
-      godown_name,
-      godown_pin,
-      vehicle_name,
-      number_plate,
-      vehicle_by,
-      vehicle_image,
-      experience_in_business,
-      year_of_establishment,
-      website_url,
-    } = req.body;
-    let vendor = await vendorSchema.findById(vendorId);
-    if (!vendor) {
-      return res.status(404).json({
-        status: 404,
-        error: "vendor not found",
-      });
-    }
-    const updateFields = {};
-    if (gst_number) updateFields.gst_number = gst_number;
-    if (pan_number) updateFields.pan_number = pan_number;
-    if (aadhaar_number) updateFields.aadhaar_number = aadhaar_number;
-    if (shop_image_or_logo) updateFields.shop_image_or_logo = shop_image_or_logo;
-    if (aadhaar_front) updateFields.aadhaar_front = aadhaar_front;
-    if (aadhaar_back) updateFields.aadhaar_back = aadhaar_back;
-    if (pan_front) updateFields.pan_front = pan_front;
-    if (pan_back) updateFields.pan_back = pan_back;
-    if (godown_name) updateFields.godown_name = godown_name;
-    if (godown_pin) updateFields.godown_pin = godown_pin;
-    if (vehicle_name) updateFields.vehicle_name = vehicle_name;
-    if (number_plate) updateFields.number_plate = number_plate;
-    if (vehicle_by) updateFields.vehicle_by = vehicle_by;
-    if (vehicle_image) updateFields.vehicle_image = vehicle_image;
-    if (experience_in_business) updateFields.experience_in_business = experience_in_business;
-    if (year_of_establishment) updateFields.year_of_establishment = year_of_establishment;
-    if (website_url !== undefined) updateFields.website_url = website_url;
+// exports.updateVendorProfile = async (req, res) => {
+//   try {
+//     const vendorId = req.params.id;
+//     const {
+//       company_type,
+//       company_name,
+//       designation,
+//       name,
+//       mca_panel_member_name,
+//       gst_number,
+//       pan_number,
+//       trand_license,
+//       cin_number,
+//       moa_number,
+//     } = req.body;
+//     let vendor = await vendorSchema.findOne({ _id: vendorId });
+//     if (!vendor) {
+//       return res.status(404).json({
+//         status: 404,
+//         error: "vendor not found",
+//       });
+//     }
+//     vendor.company_type = company_type || vendor.company_type;
+//     vendor.company_name = company_name || vendor.company_name;
+//     vendor.designation = designation || vendor.designation;
+//     vendor.name = name || vendor.name;
+//     vendor.mca_panel_member_name =
+//       mca_panel_member_name || vendor.mca_panel_member_name;
+//     vendor.gst_number = gst_number || vendor.gst_number;
+//     vendor.pan_number = pan_number || vendor.pan_number;
+//     vendor.trand_license = trand_license || vendor.trand_license;
+//     vendor.cin_number = cin_number || vendor.cin_number;
+//     vendor.moa_number = moa_number || vendor.moa_number;
 
-    const updatedVendor = await vendorSchema.findByIdAndUpdate(
-      vendorId,
-      { $set: updateFields },
-      { new: true }
-    );
-    res.status(200).json({
-      status: true,
-      success: "Profile Updated",
-      data: updatedVendor,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+//     let updatedVendor = await vendorSchema.findOneAndUpdate(
+//       { _id: vendorId },
+//       user,
+//       {
+//         new: true,
+//       }
+//     );
+//     res.status(200).json({
+//       status: true,
+//       success: "Details Added",
+//       data: updatedVendor,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 
 exports.addAddress = async (req, res) => {
   try {
@@ -850,7 +864,6 @@ exports.addAddress = async (req, res) => {
       status: true,
       success: "Address saved successfully",
       data: vendor.address,
-      vendorId: vendor._id
     });
   } catch (error) {
     console.log("error", error);
@@ -878,23 +891,11 @@ exports.vendorApprove = async (req, res) => {
       return res.status(404).json({ message: "vendor not found" });
     }
     findVendor.is_approved = true;
-    findVendor.review_status = "Approved",
-      await findVendor.save();
+    await findVendor.save();
     res.status(200).json({
       message: "vendor approved successfully",
       approval_status: findVendor.is_approved,
-      review_status: 'Approved',
     });
-    try {
-      await sendProfileReviewStatus({
-        email: findVendor.email,
-        username: findVendor.vendor_name || "Vendor",
-        review_status: "Approved",
-      });
-    } catch (mailErr) {
-      console.error("Review Status email error:", mailErr.message);
-      // ✅ do not return res here (response not yet sent? but still avoid crashing)
-    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -912,7 +913,6 @@ exports.vendorDisapprove = async (req, res) => {
     }
     findVendor.is_approved = false;
     findVendor.isActive = false;
-    findVendor.review_status = "Disapproved";
     findVendor.reason_for_disapprove = reason_for_disapprove;
     await findVendor.save();
     res.status(200).json({
@@ -920,19 +920,7 @@ exports.vendorDisapprove = async (req, res) => {
       approval_status: findVendor.is_approved,
       reason_for_disapprove: findVendor.reason_for_disapprove,
       isActive: findVendor.isActive,
-      review_status: findVendor.review_status,
     });
-    try {
-      await sendProfileReviewStatus({
-        email: findVendor.email,
-        username: findVendor.vendor_name || "Vendor",
-        review_status: "Disapproved",
-        reason: findVendor.reason_for_disapprove,
-      });
-    } catch (mailErr) {
-      console.error("Review Status email error:", mailErr.message);
-      // ✅ do not return res here (response not yet sent? but still avoid crashing)
-    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -1038,9 +1026,13 @@ exports.editBankDetails = async (req, res) => {
 
 exports.deleteVendor = async (req, res) => {
   try {
-    const deletedVendor = await vendorSchema.findOneAndDelete({
-      _id: req.params.id,
-    });
+    // Soft delete: keep the record in the DB, just flag it as deleted so it's
+    // hidden from the admin/listing views (client requirement).
+    const deletedVendor = await vendorSchema.findByIdAndUpdate(
+      req.params.id,
+      { isDeleted: true },
+      { new: true }
+    );
     if (!deletedVendor) {
       return res.status(404).json({ message: "Vendor not found" });
     }

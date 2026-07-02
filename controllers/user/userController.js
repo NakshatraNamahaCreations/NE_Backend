@@ -41,16 +41,15 @@ const sendOnboardingEmail = async (email, username, mobilenumber, password) => {
       </head>
       <body>
         <h4>Dear ${username},</h4>
-        <p>Welcome to Nithyaevent! We’re thrilled to have you as a customer We strive to provide the best service and products, and we're here to assist you with anything you need. Thank you Nithyaevent. support@nithyaevents.com</p>
+        <p>Welcome to Nithyaevent! We’re thrilled to have you as a valued partner and look forward to helping you grow your business with us.</p>
         <p>Please log in and complete your profile to proceed further.</p>
         <h4>Your Account Details:</h4>         
-        <p><strong>Mobile Number:</strong> ${mobilenumber}</p>
-        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Username:</strong> ${mobilenumber}</p>
         <p><strong>Password:</strong> ${password}</p>
                 
         <p>We’re committed to supporting you every step of the way. Let’s work together to create a great experience for your customers!</p>
         <p>Best Regards,</p>
-        <p><strong>Support Team</strong><br>Nithyaevent<br><a href="mailto:support@nithyaevents.com">support@nithyaevents.com</a> | 9980137001</p>
+        <p><strong>Support Team</strong><br>Nithyaevent<br><a href="mailto:support@nithyaevents.com">support@nithyaevents.com</a> | 99801370001</p>
         <p>&copy; 2024 All Rights Reserved, Nithyaevent<br>Designed & Developed by Kadagam Ventures Private Limited</p>
       </body>
       </html>
@@ -213,24 +212,30 @@ exports.loginWithMobileNumber = async (req, res) => {
       console.log("mobilenumber not match");
       return res.status(400).json({ message: "Mobile Number doesn't exists" });
     }
+    // const isMatch = await bcrypt.compare(password, user.password);
+    // if (!isMatch) {
+    //   console.log("Password not match");
+    //   return res.status(400).json({ message: "Password doesn't exists" });
+    // }
 
     const otp = crypto.randomInt(100000, 999999);
     const expiry = new Date(Date.now() + 60 * 1000);
 
     await otpSchema.create({ mobilenumber, otp, expiry });
     const otpMessage = `Hello ${user.username}, Your One Time Password for registration is ${otp}, this code is valid for next ${60} seconds please enter the code to proceed with anything you need. Thank You. Nithayevent`
+    // `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
+    // const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
 
-    // const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
-    // console.log("smsResponse", smsResponse);
+    const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
+    console.log("smsResponse", smsResponse);
 
-    // if (!smsResponse.success) {
-    //   return res.status(500).json({ message: "Failed to send OTP" });
-    // }
+    if (!smsResponse.success) {
+      return res.status(500).json({ message: "Failed to send OTP" });
+    }
 
     res.status(200).json({
       message: "Login successful. OTP sent to your mobile number.",
       user: user,
-      otp
     });
   } catch (error) {
     console.error(error);
@@ -240,7 +245,7 @@ exports.loginWithMobileNumber = async (req, res) => {
 
 exports.resendOTP = async (req, res) => {
   const { mobilenumber } = req.body;
-  const SMS_TYPE = "otp 17.10.2025";
+  const SMS_TYPE = "OTP TEMPLATE 24-12-24";
   try {
     const user = await UserSchema.findOne({ mobilenumber });
     if (!user) {
@@ -255,16 +260,15 @@ exports.resendOTP = async (req, res) => {
     // const otpMessage = `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
     const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
 
-    // const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
+    const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
 
-    // if (!smsResponse.success) {
-    //   return res.status(500).json({ message: "Failed to send OTP" });
-    // }
+    if (!smsResponse.success) {
+      return res.status(500).json({ message: "Failed to send OTP" });
+    }
 
     res.status(200).json({
       message: "OTP Resent",
       user,
-      otp
     });
   } catch (error) {
     console.error(error);
@@ -335,7 +339,10 @@ exports.getProfile = async (req, res) => {
 
 exports.getAllUser = async (req, res) => {
   try {
-    const user = await UserSchema.find().select("-password");
+    // Exclude soft-deleted users.
+    const user = await UserSchema.find({ isDeleted: { $ne: true } }).select(
+      "-password"
+    );
     if (user.length === 0) {
       return res.status(404).json({ message: "User not found" });
     } else {
@@ -482,7 +489,13 @@ exports.editProfile = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
   try {
-    const deletedUser = await UserSchema.findByIdAndDelete(req.params.id);
+    // Soft delete: keep the record in the DB, just flag it as deleted so it's
+    // hidden from the admin view (client requirement).
+    const deletedUser = await UserSchema.findByIdAndUpdate(
+      req.params.id,
+      { isDeleted: true },
+      { new: true }
+    );
 
     if (!deletedUser) {
       return res.status(404).json({ message: "User not found" });

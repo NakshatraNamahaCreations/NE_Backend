@@ -31,6 +31,8 @@ const userSchema = new mongoose.Schema({
   },
   saved_address: Array,
   profile_image: String,
+  // Soft-delete flag: admin "delete" hides the record without removing it.
+  isDeleted: { type: Boolean, default: false },
   company_profile: [
     {
       company_type: String,

@@ -5,7 +5,6 @@ const {
   getAllTech,
   getTechByVendorId,
   deleteTechnician,
-  editTechnician,
 } = require("../../controllers/master/technician");
 // const path = require("path");
 // const multer = require("multer");
@@ -82,6 +81,5 @@ router.get("/get-all-technician", getAllTech);
 router.get("/get-technician-by-vendor-id/:id", getTechByVendorId);
 
 router.delete("/delete_technician/:id", deleteTechnician);
-router.put("/edit-technician/:id", editTechnician);
 
 module.exports = router;
