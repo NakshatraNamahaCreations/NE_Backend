@@ -115,6 +115,7 @@ exports.downloadVendorDocument = async (req, res) => {
 exports.vendorRegister = async (req, res) => {
   try {
     const {
+      vendor_id,
       vendor_name,
       email,
       mobile_number,
@@ -129,14 +130,47 @@ exports.vendorRegister = async (req, res) => {
       profession_type,
     } = req.body;
 
-    const existingMobileNumber = await vendorSchema.findOne({ mobile_number });
+    // When the user goes back to edit step 1 of an in-progress registration,
+    // the client resends the previously created vendor_id. Duplicate checks must
+    // EXCLUDE that same record, otherwise editing triggers a false
+    // "already exists" error before registration is even finalized.
+    const excludeSelf = vendor_id ? { _id: { $ne: vendor_id } } : {};
+
+    const existingMobileNumber = await vendorSchema.findOne({
+      mobile_number,
+      ...excludeSelf,
+    });
     if (existingMobileNumber) {
       return res.status(400).json({ message: "Mobile number already exists" });
     }
 
-    const existingVendor = await vendorSchema.findOne({ email });
+    const existingVendor = await vendorSchema.findOne({ email, ...excludeSelf });
     if (existingVendor) {
       return res.status(400).json({ message: "Email already exists" });
+    }
+
+    // If an in-progress vendor_id was supplied, update that record instead of
+    // creating a duplicate.
+    if (vendor_id) {
+      const existing = await vendorSchema.findById(vendor_id);
+      if (existing) {
+        existing.vendor_name = vendor_name;
+        existing.email = email;
+        existing.mobile_number = mobile_number;
+        if (password) existing.password = await bcrypt.hash(password, 10);
+        existing.profession = profession;
+        existing.profession_category = profession_category;
+        existing.bank_name = bank_name;
+        existing.account_holder_name = account_holder_name;
+        existing.account_number = account_number;
+        existing.ifsc_code = ifsc_code;
+        existing.bank_branch_name = bank_branch_name;
+        existing.profession_type = profession_type;
+        await existing.save();
+        return res
+          .status(200)
+          .json({ message: "Please add business details", newVendor: existing });
+      }
     }
 
     // const salt = await bcrypt.genSalt(10);
@@ -633,8 +667,10 @@ exports.getVendorProfile = async (req, res) => {
 
 exports.getAllVendor = async (req, res) => {
   try {
+    // Exclude soft-deleted vendors so the list matches the website
+    // (get-product-vendor / get-service-vendor already exclude them).
     const allVendor = await vendorSchema
-      .find({ is_approved: true })
+      .find({ is_approved: true, isDeleted: { $ne: true } })
       .sort({ _id: -1 });
     if (allVendor.length > 0) {
       return res.status(200).json(allVendor);

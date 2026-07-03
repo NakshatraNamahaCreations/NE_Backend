@@ -112,19 +112,43 @@ const sendOnboardingEmail = async (email, username, mobilenumber, password) => {
 
 exports.register = async (req, res) => {
   try {
-    const { username, email, mobilenumber, password } = req.body;
+    const { user_id, username, email, mobilenumber, password } = req.body;
     const SMS_TYPE = "welcome_template";
     const welcomeMessage =
       "Welcome to NithyaEvent! We're thrilled to have you as a customer. We strive to provide the best service and products, and we're here to assist you with anything you need. Thank you Nithyaeventsupport@nithyaevents.com";
 
+    // When the user goes back to edit step 1 of an in-progress registration,
+    // the client resends the previously created user_id. Duplicate checks must
+    // EXCLUDE that same record so editing doesn't raise a false "already exists".
+    const excludeSelf = user_id ? { _id: { $ne: user_id } } : {};
+
     // Check if the user already exists
-    const existingUser = await UserSchema.findOne({ email });
+    const existingUser = await UserSchema.findOne({ email, ...excludeSelf });
     if (existingUser) {
       return res.status(400).json({ message: "Email already exists" });
     }
-    const existingMobileNumber = await UserSchema.findOne({ mobilenumber });
+    const existingMobileNumber = await UserSchema.findOne({
+      mobilenumber,
+      ...excludeSelf,
+    });
     if (existingMobileNumber) {
       return res.status(400).json({ message: "Mobile Number already exists" });
+    }
+
+    // If editing an in-progress registration, update that record instead of
+    // creating a duplicate (and skip re-sending the onboarding email).
+    if (user_id) {
+      const existing = await UserSchema.findById(user_id);
+      if (existing) {
+        existing.username = username;
+        existing.email = email;
+        existing.mobilenumber = mobilenumber;
+        if (password) existing.password = await bcrypt.hash(password, 10);
+        await existing.save();
+        return res
+          .status(201)
+          .json({ message: "Account updated", newUser: existing });
+      }
     }
     // Hash the password
     // const salt = await bcrypt.genSalt(10);
