@@ -68,6 +68,7 @@ const serviceEnquiry = require("./routes/vendor/service-enquiry");
 const userPayemt = require("./routes/payment/payment");
 const addOnsForService = require("./routes/vendor/addons");
 const generateInvoice = require("./routes/payouts/generate-invoice");
+const moodboard = require("./routes/moodboard/moodboard");
 
 const { default: axios } = require("axios");
 // Middleware
@@ -87,6 +88,7 @@ app.use("/api/order", order);
 app.use("/api/team", team);
 app.use("/api/service", service);
 app.use("/api/sub-service", subService);
+app.use("/api/moodboard", moodboard);
 app.use("/api/user-order", userorder);
 app.use("/api/banners", banners);
 app.use("/api/faq", faq);

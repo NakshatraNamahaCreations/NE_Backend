@@ -237,28 +237,30 @@ exports.loginWithMobileNumber = async (req, res) => {
       return res.status(400).json({ message: "Mobile Number doesn't exists" });
     }
 
-    // A registered mobile number logs in directly — OTP verification is not part
-    // of this flow. Respond immediately so the login never depends on the SMS
-    // gateway. (Previously we awaited sendSMS, which has no timeout, so when the
-    // SMS provider hung the whole request timed out with a 504.)
+    // Generate and store the OTP up front so it can be returned to the app (the
+    // OTP screen displays it) and later verified via /verify-otp.
+    const otp = crypto.randomInt(100000, 999999);
+    const expiry = new Date(Date.now() + 60 * 1000);
+    await otpSchema.create({ mobilenumber, otp, expiry });
+
+    // Respond immediately with the OTP so the request never depends on the SMS
+    // gateway. (Previously we awaited sendSMS, which has no timeout, so a hung
+    // SMS provider timed the whole request out with a 504.)
     res.status(200).json({
-      message: "Login successful",
+      message: "OTP sent to your mobile number",
       user: user,
+      otp: otp,
     });
 
-    // Fire-and-forget OTP SMS — best effort only; it can never block or fail the
-    // login above.
+    // Send the OTP SMS best-effort in the background — never blocks the response.
     (async () => {
       try {
-        const otp = crypto.randomInt(100000, 999999);
-        const expiry = new Date(Date.now() + 60 * 1000);
-        await otpSchema.create({ mobilenumber, otp, expiry });
         const otpMessage = `Hello ${user.username}, Your One Time Password for registration is ${otp}, this code is valid for next ${60} seconds please enter the code to proceed with anything you need. Thank You. Nithayevent`;
         const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
         console.log("smsResponse", smsResponse);
       } catch (smsErr) {
         console.warn(
-          "OTP SMS failed (login already returned):",
+          "OTP SMS failed (response already sent):",
           smsErr?.message || smsErr
         );
       }
