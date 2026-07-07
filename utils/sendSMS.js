@@ -36,16 +36,19 @@ exports.sendSMS = async (mobilenumber, message, SMS_TYPE) => {
         Authorization: AUTH_HEADDER,
       },
       data: data,
+      // Fail fast instead of hanging the request if the SMS provider stalls.
+      timeout: 10000,
     };
 
     const response = await axios(config);
     console.log("SMS response:", response.data);
     return { success: true, data: response.data };
   } catch (error) {
-    console.error(
-      "Error sending SMS:",
-      error.response ? error.response.data : error.message
-    );
+    const details = error.response ? error.response.data : error.message;
+    console.error("Error sending SMS:", details);
+    // Always return a result object so callers can handle the failure cleanly
+    // instead of crashing on `smsResponse.success` (undefined) with a 500.
+    return { success: false, error: details };
   }
 };
 

@@ -236,31 +236,34 @@ exports.loginWithMobileNumber = async (req, res) => {
       console.log("mobilenumber not match");
       return res.status(400).json({ message: "Mobile Number doesn't exists" });
     }
-    // const isMatch = await bcrypt.compare(password, user.password);
-    // if (!isMatch) {
-    //   console.log("Password not match");
-    //   return res.status(400).json({ message: "Password doesn't exists" });
-    // }
 
-    const otp = crypto.randomInt(100000, 999999);
-    const expiry = new Date(Date.now() + 60 * 1000);
-
-    await otpSchema.create({ mobilenumber, otp, expiry });
-    const otpMessage = `Hello ${user.username}, Your One Time Password for registration is ${otp}, this code is valid for next ${60} seconds please enter the code to proceed with anything you need. Thank You. Nithayevent`
-    // `Hello ${user.username},Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
-    // const otpMessage = `Hello Naveen,Your one-time password (OTP) for registration is ${otp}. This code is valid for the next 60 secondsPlease enter this code to proceed with your action. If you did not request this OTP, please disregard this message.NithyaEvents`;
-
-    const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
-    console.log("smsResponse", smsResponse);
-
-    if (!smsResponse.success) {
-      return res.status(500).json({ message: "Failed to send OTP" });
-    }
-
+    // A registered mobile number logs in directly — OTP verification is not part
+    // of this flow. Respond immediately so the login never depends on the SMS
+    // gateway. (Previously we awaited sendSMS, which has no timeout, so when the
+    // SMS provider hung the whole request timed out with a 504.)
     res.status(200).json({
-      message: "Login successful. OTP sent to your mobile number.",
+      message: "Login successful",
       user: user,
     });
+
+    // Fire-and-forget OTP SMS — best effort only; it can never block or fail the
+    // login above.
+    (async () => {
+      try {
+        const otp = crypto.randomInt(100000, 999999);
+        const expiry = new Date(Date.now() + 60 * 1000);
+        await otpSchema.create({ mobilenumber, otp, expiry });
+        const otpMessage = `Hello ${user.username}, Your One Time Password for registration is ${otp}, this code is valid for next ${60} seconds please enter the code to proceed with anything you need. Thank You. Nithayevent`;
+        const smsResponse = await sendSMS(mobilenumber, otpMessage, SMS_TYPE);
+        console.log("smsResponse", smsResponse);
+      } catch (smsErr) {
+        console.warn(
+          "OTP SMS failed (login already returned):",
+          smsErr?.message || smsErr
+        );
+      }
+    })();
+    return;
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
