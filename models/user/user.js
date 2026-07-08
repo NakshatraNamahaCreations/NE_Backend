@@ -31,6 +31,8 @@ const userSchema = new mongoose.Schema({
   },
   saved_address: Array,
   profile_image: String,
+  // Which platform the user registered from: "web" (website) or "app" (user app).
+  registered_from: { type: String, default: "app" },
   // Soft-delete flag: admin "delete" hides the record without removing it.
   isDeleted: { type: Boolean, default: false },
   company_profile: [

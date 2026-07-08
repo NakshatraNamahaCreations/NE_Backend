@@ -112,7 +112,8 @@ const sendOnboardingEmail = async (email, username, mobilenumber, password) => {
 
 exports.register = async (req, res) => {
   try {
-    const { user_id, username, email, mobilenumber, password } = req.body;
+    const { user_id, username, email, mobilenumber, password, registered_from } =
+      req.body;
     const SMS_TYPE = "welcome_template";
     const welcomeMessage =
       "Welcome to NithyaEvent! We're thrilled to have you as a customer. We strive to provide the best service and products, and we're here to assist you with anything you need. Thank you Nithyaeventsupport@nithyaevents.com";
@@ -160,6 +161,7 @@ exports.register = async (req, res) => {
       email,
       password: hashedPassword,
       mobilenumber,
+      registered_from: registered_from || "app",
     });
 
     await newUser.save();

@@ -21,13 +21,19 @@ exports.newPayment = async (req, res) => {
     // ✅ auto-generate transaction id (same as mobile)
     const merchantTransactionId = uuidv4();
 
+    // PhonePe redirects (POST) the customer back here after payment. This must
+    // be a publicly reachable backend URL that matches the web-status route
+    // (`/api/payment/web-status/:txn`) — a localhost URL breaks completion.
+    const SERVER_BASE =
+      process.env.SERVER_BASE_URL || "https://api.nithyaevent.com";
+
     const data = {
       merchantId: "M22E0HWMLLIYY",
       merchantTransactionId: merchantTransactionId,
       merchantUserId: req.body.MUID,
       name: req.body.name,
       amount: req.body.amount * 100,
-      redirectUrl: `http://localhost:5000/api/status/M22E0HWMLLIYY/${merchantTransactionId}`,
+      redirectUrl: `${SERVER_BASE}/api/payment/web-status/${merchantTransactionId}`,
       redirectMode: "POST",
       mobileNumber: req.body.number,
       paymentInstrument: {

@@ -76,6 +76,9 @@ const vendorSchema = new mongoose.Schema({
   vehicle_image: String,
   vehicle_by: String,
   is_approved: Boolean,
+  // "Under Review" | "Approved" | "Disapproved" — drives whether the vendor can
+  // use the app. A profile edit resets this to "Under Review".
+  review_status: { type: String, default: "Under Review" },
   reason_for_disapprove: String,
   isActive: Boolean,
   // Soft-delete flag: admin "delete" hides the record without removing it.

@@ -212,7 +212,7 @@ exports.vendorRegister = async (req, res) => {
 exports.editProfilePicture = async (req, res) => {
   try {
     const userId = req.params.id;
-    const { shop_image_or_logo } = req.body;
+    const { shop_image_or_logo, vendor_name, mobile_number } = req.body;
 
     const findUser = await vendorSchema.findById(userId);
     if (!findUser) {
@@ -222,8 +222,15 @@ exports.editProfilePicture = async (req, res) => {
       });
     }
 
-    const updateFields = {};
+    // A vendor may edit only Profile Image, Name and Phone. Any such edit sends
+    // the profile back to admin review and blocks app usage until re-approved.
+    const updateFields = {
+      review_status: "Under Review",
+      is_approved: false,
+    };
     if (shop_image_or_logo) updateFields.shop_image_or_logo = shop_image_or_logo;
+    if (vendor_name) updateFields.vendor_name = vendor_name;
+    if (mobile_number) updateFields.mobile_number = mobile_number;
 
     const updatedUser = await vendorSchema.findByIdAndUpdate(
       userId,
@@ -927,6 +934,7 @@ exports.vendorApprove = async (req, res) => {
       return res.status(404).json({ message: "vendor not found" });
     }
     findVendor.is_approved = true;
+    findVendor.review_status = "Approved";
     await findVendor.save();
     res.status(200).json({
       message: "vendor approved successfully",
@@ -949,6 +957,7 @@ exports.vendorDisapprove = async (req, res) => {
     }
     findVendor.is_approved = false;
     findVendor.isActive = false;
+    findVendor.review_status = "Disapproved";
     findVendor.reason_for_disapprove = reason_for_disapprove;
     await findVendor.save();
     res.status(200).json({
