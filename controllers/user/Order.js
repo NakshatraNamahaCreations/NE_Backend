@@ -247,30 +247,51 @@ exports.userOrder = async (req, res) => {
       otp: Math.floor(Math.random() * 9000) + 1000,
     });
     await newOrder.save();
-    // Notify the vendors about the order
-    for (const product of parsedProductData) {
-      const productNotification = {
-        vendor_id: product.sellerId,
-        notification_type: "product_booking",
-        message: `Your product "${product.productName}" has been booked for the ${event_name} from ${event_date}.`,
-        product_id: product.id,
-        metadata: { user_id, order_status },
-        status: "unread",
-        created_at: new Date(),
-      };
-      await notificationSchema.create(productNotification);
-    }
-    for (const service of parsedServiceData) {
-      const serviceNotification = {
-        vendor_id: service.sellerId,
-        notification_type: "service_booking",
-        message: `Your Service "${service.productName}" has been booked for the ${event_name} from ${event_date}.`,
-        product_id: service.id,
-        metadata: { user_id, order_status },
-        status: "unread",
-        created_at: new Date(),
-      };
-      await notificationSchema.create(serviceNotification);
+    // Notify the vendors about the order. This is best-effort: a notification
+    // failure must never fail the order itself, so it's wrapped and each
+    // vendor id is validated (a missing/"Unknown" sellerId would create an
+    // orphan notification the vendor can never see).
+    const isValidVendorId = (id) =>
+      id && typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
+    try {
+      for (const product of parsedProductData) {
+        if (!isValidVendorId(product.sellerId)) {
+          console.warn(
+            `Skipping product booking notification — invalid vendor id:`,
+            product.sellerId
+          );
+          continue;
+        }
+        await notificationSchema.create({
+          vendor_id: product.sellerId,
+          notification_type: "product_booking",
+          message: `Your product "${product.productName}" has been booked for the ${event_name} from ${event_date}.`,
+          product_id: product.id,
+          user_id,
+          metadata: { user_id, order_status, order_id: orderId },
+          status: "unread",
+        });
+      }
+      for (const service of parsedServiceData) {
+        if (!isValidVendorId(service.sellerId)) {
+          console.warn(
+            `Skipping service booking notification — invalid vendor id:`,
+            service.sellerId
+          );
+          continue;
+        }
+        await notificationSchema.create({
+          vendor_id: service.sellerId,
+          notification_type: "service_booking",
+          message: `Your Service "${service.productName}" has been booked for the ${event_name} from ${event_date}.`,
+          product_id: service.id,
+          user_id,
+          metadata: { user_id, order_status, order_id: orderId },
+          status: "unread",
+        });
+      }
+    } catch (notifyErr) {
+      console.error("Vendor order notification failed:", notifyErr.message);
     }
     // mail the user with the order details
     const deliveryMessage = `Dear ${user_name}, Thank you for your purchase! We're excited to confirm that we've received your order #{#var#}. Your order is being processed and we’ll notify you once it’s on its way. Order Details: Order Number: {#var#} Items Ordered: {#var#} – {#var#} – {#var#} {#var#} –{#var#} – {#var#} {#var#} Billing Information: Billing Name: {#var#} Billing Address: {#var#} Shipping Information: Shipping Address: {#var#} Shipping Method: {#var#} Estimated Delivery Date: {#var#} If you have any questions or need to make changes, feel free to reach out to our customer support at Support@nithyaevents.com. We’re here to help! Thank you for choosing NithyaEvent. We hope you have the best experience! Best regards, NithyaEvent Support@nithyaevents.com www.nithyaevent.com`;
