@@ -318,6 +318,8 @@ exports.addServiceUserBusinessDetails = async (req, res) => {
       website_url,
       gst_number,
       pricing,
+      pan_number,
+      aadhaar_number,
       // business_hours,
       shop_name,
     } = req.body;
@@ -326,22 +328,29 @@ exports.addServiceUserBusinessDetails = async (req, res) => {
     //   ? business_hours
     //   : JSON.parse(business_hours);
 
+    // Only overwrite an image field when a new one was actually uploaded, so a
+    // re-submit without re-picking a file doesn't wipe the existing document.
+    const updateFields = {
+      shop_name: shop_name,
+      year_of_establishment: year_of_establishment,
+      website_url: website_url,
+      pricing: pricing,
+      gst_number: gst_number,
+      pan_number: pan_number,
+      aadhaar_number: aadhaar_number,
+      experience_in_business: experience_in_business,
+    };
+    if (req.body.shop_image_or_logo)
+      updateFields.shop_image_or_logo = req.body.shop_image_or_logo;
+    if (req.body.aadhaar_front)
+      updateFields.aadhaar_front = req.body.aadhaar_front;
+    if (req.body.aadhaar_back) updateFields.aadhaar_back = req.body.aadhaar_back;
+    if (req.body.pan_front) updateFields.pan_front = req.body.pan_front;
+    if (req.body.pan_back) updateFields.pan_back = req.body.pan_back;
+
     const updatedVendor = await vendorSchema.findByIdAndUpdate(
       userId,
-      {
-        shop_name: shop_name,
-        year_of_establishment: year_of_establishment,
-        website_url: website_url,
-        pricing: pricing,
-        gst_number: gst_number,
-        // business_hours: parsedBusinessHours,
-        experience_in_business: experience_in_business,
-        shop_image_or_logo: req.body.shop_image_or_logo,
-        aadhaar_front: req.body.aadhaar_front,
-        aadhaar_back: req.body.aadhaar_back,
-        // commission_percentage: 22,
-        // commission_tax: 18,
-      },
+      updateFields,
       { new: true }
     );
 

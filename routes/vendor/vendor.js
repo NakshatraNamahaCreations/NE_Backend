@@ -121,6 +121,14 @@ const uploadToS3 = async (req, res, next) => {
     req.body.aadhaar_back = uploadedFiles.aadhaar_back
       ? uploadedFiles.aadhaar_back[0]
       : null;
+
+    req.body.pan_front = uploadedFiles.pan_front
+      ? uploadedFiles.pan_front[0]
+      : null;
+
+    req.body.pan_back = uploadedFiles.pan_back
+      ? uploadedFiles.pan_back[0]
+      : null;
     next();
   } catch (error) {
     console.error("Upload error:", error);
@@ -199,6 +207,8 @@ router.put(
     { name: "shop_image_or_logo", maxCount: 1 },
     { name: "aadhaar_front", maxCount: 1 },
     { name: "aadhaar_back", maxCount: 1 },
+    { name: "pan_front", maxCount: 1 },
+    { name: "pan_back", maxCount: 1 },
   ]), //vendor profile
   uploadToS3,
   addServiceUserBusinessDetails
