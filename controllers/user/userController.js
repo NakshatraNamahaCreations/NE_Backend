@@ -123,13 +123,22 @@ exports.register = async (req, res) => {
     // EXCLUDE that same record so editing doesn't raise a false "already exists".
     const excludeSelf = user_id ? { _id: { $ne: user_id } } : {};
 
+    // Ignore soft-deleted records so an admin-deleted user frees up their
+    // email/mobile for a fresh registration.
+    const notDeleted = { isDeleted: { $ne: true } };
+
     // Check if the user already exists
-    const existingUser = await UserSchema.findOne({ email, ...excludeSelf });
+    const existingUser = await UserSchema.findOne({
+      email,
+      ...notDeleted,
+      ...excludeSelf,
+    });
     if (existingUser) {
       return res.status(400).json({ message: "Email already exists" });
     }
     const existingMobileNumber = await UserSchema.findOne({
       mobilenumber,
+      ...notDeleted,
       ...excludeSelf,
     });
     if (existingMobileNumber) {
@@ -189,8 +198,9 @@ exports.login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required" });
     }
-    // Find the user by email
-    const user = await UserSchema.findOne({ email });
+    // Find the user by email (ignore soft-deleted records so a re-registered
+    // account isn't shadowed by an old deleted one).
+    const user = await UserSchema.findOne({ email, isDeleted: { $ne: true } });
     if (!user) {
       return res.status(400).json({ message: "email not match" });
     }
@@ -233,7 +243,10 @@ exports.loginWithMobileNumber = async (req, res) => {
       return res.status(400).json({ error: "Mobilenumber is required" });
     }
 
-    const user = await UserSchema.findOne({ mobilenumber });
+    const user = await UserSchema.findOne({
+      mobilenumber,
+      isDeleted: { $ne: true },
+    });
     if (!user) {
       console.log("mobilenumber not match");
       return res.status(400).json({ message: "Mobile Number doesn't exists" });
@@ -278,7 +291,10 @@ exports.resendOTP = async (req, res) => {
   const { mobilenumber } = req.body;
   const SMS_TYPE = "OTP TEMPLATE 24-12-24";
   try {
-    const user = await UserSchema.findOne({ mobilenumber });
+    const user = await UserSchema.findOne({
+      mobilenumber,
+      isDeleted: { $ne: true },
+    });
     if (!user) {
       console.log("Mobile Number not match");
       return res.status(400).json({ message: "mobile number not match" });

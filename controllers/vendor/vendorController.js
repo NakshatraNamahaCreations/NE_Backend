@@ -136,15 +136,24 @@ exports.vendorRegister = async (req, res) => {
     // "already exists" error before registration is even finalized.
     const excludeSelf = vendor_id ? { _id: { $ne: vendor_id } } : {};
 
+    // Ignore soft-deleted records so an admin-deleted vendor frees up their
+    // mobile/email for a fresh registration.
+    const notDeleted = { isDeleted: { $ne: true } };
+
     const existingMobileNumber = await vendorSchema.findOne({
       mobile_number,
+      ...notDeleted,
       ...excludeSelf,
     });
     if (existingMobileNumber) {
       return res.status(400).json({ message: "Mobile number already exists" });
     }
 
-    const existingVendor = await vendorSchema.findOne({ email, ...excludeSelf });
+    const existingVendor = await vendorSchema.findOne({
+      email,
+      ...notDeleted,
+      ...excludeSelf,
+    });
     if (existingVendor) {
       return res.status(400).json({ message: "Email already exists" });
     }
@@ -546,8 +555,12 @@ exports.vendorLoginWithGmail = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required" });
     }
-    // Find the vendor by email
-    const vendor = await vendorSchema.findOne({ email });
+    // Find the vendor by email (ignore soft-deleted records so a re-registered
+    // account isn't shadowed by an old deleted one).
+    const vendor = await vendorSchema.findOne({
+      email,
+      isDeleted: { $ne: true },
+    });
     if (!vendor) {
       return res.status(400).json({ message: "email not match" });
     }
@@ -591,8 +604,11 @@ exports.loginWithMobile = async (req, res) => {
     if (!mobile_number) {
       return res.status(400).json({ error: "Mobile number required" });
     }
-    // Find the vendor by mobile number
-    const vendor = await vendorSchema.findOne({ mobile_number });
+    // Find the vendor by mobile number (ignore soft-deleted records)
+    const vendor = await vendorSchema.findOne({
+      mobile_number,
+      isDeleted: { $ne: true },
+    });
     if (!vendor) {
       return res.status(400).json({ message: "mobile number not match" });
     }
