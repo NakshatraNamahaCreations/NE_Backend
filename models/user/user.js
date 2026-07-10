@@ -35,6 +35,8 @@ const userSchema = new mongoose.Schema({
   registered_from: { type: String, default: "app" },
   // Soft-delete flag: admin "delete" hides the record without removing it.
   isDeleted: { type: Boolean, default: false },
+  // Admin block flag: a blocked user cannot log in / use the app.
+  is_block: { type: Boolean, default: false },
   company_profile: [
     {
       company_type: String,

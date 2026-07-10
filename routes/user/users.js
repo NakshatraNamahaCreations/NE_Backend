@@ -12,6 +12,7 @@ const {
   updateProfile,
   addAddress,
   deleteUser,
+  toggleBlockUser,
   verifyIdToken,
   forgotPassword,
   verifyEmailOTP,
@@ -149,5 +150,6 @@ router.put(
 );
 router.put("/save-delivery-address/:id", addAddress);
 router.delete("/delete-profile/:id", deleteUser);
+router.put("/toggle-block/:id", toggleBlockUser);
 
 module.exports = router;

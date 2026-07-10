@@ -204,6 +204,11 @@ exports.login = async (req, res) => {
     if (!user) {
       return res.status(400).json({ message: "email not match" });
     }
+    if (user.is_block) {
+      return res.status(403).json({
+        message: "Your account has been blocked. Please contact support.",
+      });
+    }
     // console.log("User found:", user);
 
     // console.log("user", user.password);
@@ -250,6 +255,11 @@ exports.loginWithMobileNumber = async (req, res) => {
     if (!user) {
       console.log("mobilenumber not match");
       return res.status(400).json({ message: "Mobile Number doesn't exists" });
+    }
+    if (user.is_block) {
+      return res.status(403).json({
+        message: "Your account has been blocked. Please contact support.",
+      });
     }
 
     // Generate and store the OTP up front so it can be returned to the app (the
@@ -551,6 +561,33 @@ exports.deleteUser = async (req, res) => {
     res.json({ message: "User deleted successfully" });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Block / unblock a user. Accepts an explicit is_block value; if omitted it
+// toggles the current state.
+exports.toggleBlockUser = async (req, res) => {
+  try {
+    const user = await UserSchema.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const nextBlocked =
+      typeof req.body?.is_block === "boolean"
+        ? req.body.is_block
+        : !user.is_block;
+    user.is_block = nextBlocked;
+    await user.save();
+    return res.status(200).json({
+      message: nextBlocked
+        ? "User blocked successfully"
+        : "User unblocked successfully",
+      is_block: user.is_block,
+      user,
+    });
+  } catch (error) {
+    console.error("toggleBlockUser error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
