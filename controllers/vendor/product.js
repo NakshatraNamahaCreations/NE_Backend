@@ -728,17 +728,31 @@ exports.searchProduct = async (req, res) => {
 
     const filter = {};
 
-    if (searchQuery) {
-      filter.product_name = { $regex: searchQuery, $options: "i" };
+    // A general keyword (from `name` or `searchQuery`) now matches across all
+    // the meaningful product fields — name, category, description, brand,
+    // model, type, and the vendor/shop — so a search returns results for far
+    // more keywords (previously it only matched product_name).
+    const term = name || searchQuery;
+    if (term) {
+      const rx = { $regex: term, $options: "i" };
+      filter.$or = [
+        { product_name: rx },
+        { product_category: rx },
+        { product_description: rx },
+        { brand: rx },
+        { model_name: rx },
+        { product_type: rx },
+        { material_type: rx },
+        { shop_name: rx },
+        { vendor_name: rx },
+      ];
     }
+    // Explicit exact filters (used by category/brand pages) still narrow further.
     if (category) {
       filter.product_category = category;
     }
     if (brand) {
       filter.brand = brand;
-    }
-    if (name) {
-      filter.product_name = { $regex: name, $options: "i" };
     }
 
     const products = await productSchema.find(filter).skip(skip).limit(limit);
