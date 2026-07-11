@@ -40,18 +40,31 @@ exports.downloadVendorDocuments = async (req, res) => {
     const zip = new JSZip();
     let added = 0;
 
-    for (const { field, label } of VENDOR_DOC_FIELDS) {
-      const url = vendor[field];
-      if (!url) continue;
+    // Helper: fetch a URL and add it to the zip under the given name.
+    const addToZip = async (url, name) => {
+      if (!url || typeof url !== "string") return;
       try {
         const resp = await axios.get(url, {
           responseType: "arraybuffer",
           timeout: 20000,
         });
-        zip.file(`${label}.${extFromUrl(url)}`, resp.data);
+        zip.file(`${name}.${extFromUrl(url)}`, resp.data);
         added++;
       } catch (e) {
-        console.warn(`Failed to fetch ${field} for vendor ${vendor._id}:`, e.message);
+        console.warn(`Failed to fetch ${name} for vendor ${vendor._id}:`, e.message);
+      }
+    };
+
+    // 1) The fixed KYC / profile documents.
+    for (const { field, label } of VENDOR_DOC_FIELDS) {
+      await addToZip(vendor[field], label);
+    }
+
+    // 2) Any additional images the vendor uploaded (an array) so nothing shown
+    //    on the profile is missing from the ZIP.
+    if (Array.isArray(vendor.additional_images)) {
+      for (let i = 0; i < vendor.additional_images.length; i++) {
+        await addToZip(vendor.additional_images[i], `Additional_Image_${i + 1}`);
       }
     }
 
