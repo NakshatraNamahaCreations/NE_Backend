@@ -30,6 +30,27 @@ const safeName = (str) =>
   "vendor";
 
 // Download all of a vendor's documents as a single ZIP.
+// Save/refresh a vendor's FCM device token (called by the Vendor App after
+// login / whenever the token changes) so push notifications can reach them.
+exports.saveVendorFcmToken = async (req, res) => {
+  try {
+    const { fcm_token } = req.body;
+    if (!fcm_token) {
+      return res.status(400).json({ message: "fcm_token is required" });
+    }
+    const vendor = await vendorSchema.findByIdAndUpdate(
+      req.params.id,
+      { fcm_token },
+      { new: true }
+    );
+    if (!vendor) return res.status(404).json({ message: "Vendor not found" });
+    return res.status(200).json({ message: "Token saved" });
+  } catch (error) {
+    console.error("saveVendorFcmToken error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.downloadVendorDocuments = async (req, res) => {
   try {
     const vendor = await vendorSchema.findById(req.params.id);

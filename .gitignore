@@ -92,6 +92,9 @@ client_secret.json
 *.pem
 *.key
 serviceAccount*.json
+# Firebase Admin SDK service-account keys (push notifications) — SECRET
+*firebase-adminsdk*.json
+firebase-service-account.json
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

@@ -38,6 +38,7 @@ const {
   resendEmailOTP,
   downloadVendorDocuments,
   downloadVendorDocument,
+  saveVendorFcmToken,
 } = require("../../controllers/vendor/vendorController");
 const multer = require("multer");
 const path = require("path");
@@ -226,6 +227,7 @@ router.get("/get-vendor-by-servicename/:name", getVendorByServiceName);
 
 // Document downloads (server-side proxy — S3 has no CORS for browser fetch)
 router.get("/download-documents/:id", downloadVendorDocuments);
+router.put("/save-fcm-token/:id", saveVendorFcmToken);
 router.get("/download-document/:id/:field", downloadVendorDocument);
 router.delete("/delete-vendor-profile", deleteVendorProfile);
 router.put("/add-address/:id", addAddress);

@@ -1,6 +1,8 @@
 const UserOrder = require("../../models/user/Order");
 
 const notificationSchema = require("../../models/notifications/vendor-inapp");
+const vendorSchema = require("../../models/vendor/vendor");
+const { sendPush } = require("../../utilities/firebase");
 const { default: axios } = require("axios");
 const apiKey = process.env.SENDINBLUE_API_KEY;
 const url = "https://api.brevo.com/v3/smtp/email";
@@ -253,6 +255,8 @@ exports.userOrder = async (req, res) => {
     // orphan notification the vendor can never see).
     const isValidVendorId = (id) =>
       id && typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
+    // Unique vendors involved in this order — used to send ONE push per vendor.
+    const notifiedVendorIds = new Set();
     try {
       for (const product of parsedProductData) {
         if (!isValidVendorId(product.sellerId)) {
@@ -262,6 +266,7 @@ exports.userOrder = async (req, res) => {
           );
           continue;
         }
+        notifiedVendorIds.add(product.sellerId);
         await notificationSchema.create({
           vendor_id: product.sellerId,
           notification_type: "product_booking",
@@ -280,6 +285,7 @@ exports.userOrder = async (req, res) => {
           );
           continue;
         }
+        notifiedVendorIds.add(service.sellerId);
         await notificationSchema.create({
           vendor_id: service.sellerId,
           notification_type: "service_booking",
@@ -293,6 +299,29 @@ exports.userOrder = async (req, res) => {
     } catch (notifyErr) {
       console.error("Vendor order notification failed:", notifyErr.message);
     }
+
+    // Push notification (with sound) to each vendor's device — best-effort, in
+    // the background so it never blocks/breaks the order response.
+    (async () => {
+      try {
+        const vendors = await vendorSchema.find(
+          { _id: { $in: Array.from(notifiedVendorIds) } },
+          "fcm_token"
+        );
+        for (const v of vendors) {
+          if (!v.fcm_token) continue;
+          await sendPush(v.fcm_token, {
+            title: "New Order Received 🎉",
+            body: `You have a new booking for "${event_name}". Tap to view.`,
+            data: { type: "new_order", order_id: orderId },
+            sound: "default",
+            channelId: "orders",
+          });
+        }
+      } catch (pushErr) {
+        console.error("Vendor push notification failed:", pushErr.message);
+      }
+    })();
     // mail the user with the order details
     const deliveryMessage = `Dear ${user_name}, Thank you for your purchase! We're excited to confirm that we've received your order #{#var#}. Your order is being processed and we’ll notify you once it’s on its way. Order Details: Order Number: {#var#} Items Ordered: {#var#} – {#var#} – {#var#} {#var#} –{#var#} – {#var#} {#var#} Billing Information: Billing Name: {#var#} Billing Address: {#var#} Shipping Information: Shipping Address: {#var#} Shipping Method: {#var#} Estimated Delivery Date: {#var#} If you have any questions or need to make changes, feel free to reach out to our customer support at Support@nithyaevents.com. We’re here to help! Thank you for choosing NithyaEvent. We hope you have the best experience! Best regards, NithyaEvent Support@nithyaevents.com www.nithyaevent.com`;
     const ordered_date = new Date();

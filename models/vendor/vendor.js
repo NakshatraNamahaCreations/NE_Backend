@@ -86,6 +86,8 @@ const vendorSchema = new mongoose.Schema({
   isActive: Boolean,
   // Soft-delete flag: admin "delete" hides the record without removing it.
   isDeleted: { type: Boolean, default: false },
+  // FCM device token for push notifications (new-order alerts, etc.).
+  fcm_token: { type: String, default: "" },
   // requirement_fields: Array,
   pricing: Number,
   experience_in_business: String,
