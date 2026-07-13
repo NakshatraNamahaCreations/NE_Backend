@@ -8,23 +8,56 @@ const path = require("path");
 let admin = null;
 let initialized = false;
 
+// Load the service account from (in order): a full JSON env var, three separate
+// env vars, or a local JSON file. Env vars are preferred for cloud deploys.
+function loadServiceAccount() {
+  // 1) Entire service-account JSON in one env var.
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      const parsed = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      if (parsed.private_key) {
+        parsed.private_key = parsed.private_key.replace(/\\n/g, "\n");
+      }
+      return parsed;
+    } catch (e) {
+      console.error("FIREBASE_SERVICE_ACCOUNT is not valid JSON:", e.message);
+    }
+  }
+  // 2) The three required fields as separate env vars.
+  if (
+    process.env.FIREBASE_PROJECT_ID &&
+    process.env.FIREBASE_CLIENT_EMAIL &&
+    process.env.FIREBASE_PRIVATE_KEY
+  ) {
+    return {
+      project_id: process.env.FIREBASE_PROJECT_ID,
+      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      // .env stores newlines as literal "\n"; convert them back.
+      private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    };
+  }
+  // 3) A JSON file on disk (local dev).
+  const keyPath =
+    process.env.FIREBASE_KEY_PATH ||
+    path.join(process.cwd(), "firebase-service-account.json");
+  if (fs.existsSync(keyPath)) return require(keyPath);
+  return null;
+}
+
 try {
   // Require inside try so a missing package never crashes the server — push is
   // simply disabled until firebase-admin is installed + the key is present.
   admin = require("firebase-admin");
-  const keyPath =
-    process.env.FIREBASE_KEY_PATH ||
-    path.join(process.cwd(), "firebase-service-account.json");
+  const serviceAccount = loadServiceAccount();
 
-  if (fs.existsSync(keyPath)) {
-    const serviceAccount = require(keyPath);
+  if (serviceAccount) {
     admin.initializeApp({ credential: admin.cert(serviceAccount) });
     initialized = true;
     console.log("✅ Firebase Admin initialized (push enabled)");
   } else {
     console.warn(
-      "⚠️ Firebase service account not found — push notifications disabled. " +
-        "Place firebase-service-account.json in the backend root or set FIREBASE_KEY_PATH."
+      "⚠️ Firebase credentials not found — push notifications disabled. " +
+        "Set FIREBASE_SERVICE_ACCOUNT (or FIREBASE_PROJECT_ID/CLIENT_EMAIL/PRIVATE_KEY) in .env."
     );
   }
 } catch (err) {
