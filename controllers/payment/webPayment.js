@@ -45,6 +45,9 @@ exports.newPayment = async (req, res) => {
       amount: req.body.amount * 100,
       redirectUrl: `${SERVER_BASE}/api/payment/web-status/${merchantTransactionId}`,
       redirectMode: "POST",
+      // Match the (working) app payload, which also sends a server-to-server
+      // callbackUrl alongside the redirect.
+      callbackUrl: `${SERVER_BASE}/api/payment/web-status/${merchantTransactionId}`,
       mobileNumber: req.body.number,
       paymentInstrument: {
         type: "PAY_PAGE"
