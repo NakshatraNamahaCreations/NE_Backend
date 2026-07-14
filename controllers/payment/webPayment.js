@@ -79,10 +79,22 @@ exports.newPayment = async (req, res) => {
 // -----------------------------------------------------
 // ✅ 2. CHECK STATUS (WEB REDIRECT HANDLER)
 // -----------------------------------------------------
+// The website page that finalizes the booking after payment. Never use a
+// localhost value (a stale dev env var) — customers can't reach it — always
+// fall back to the live site.
+const getClientSuccessUrl = () => {
+  const url = process.env.CLIENT_SUCCESS_URL;
+  if (!url || /localhost|127\.0\.0\.1/i.test(url)) {
+    return "https://nithyaevent.com/payment-success";
+  }
+  return url;
+};
+
 exports.checkStatus = async (req, res) => {
   try {
     const merchantTransactionId = req.params.txn;
     const merchantId = MERCHANT_ID;
+    const CLIENT_SUCCESS_URL = getClientSuccessUrl();
 
     const path = `/pg/v1/status/${merchantId}/${merchantTransactionId}`;
     const hash = sha256(path + SALT_KEY);
@@ -104,18 +116,16 @@ exports.checkStatus = async (req, res) => {
     // ✅ If payment success redirect FE
     if (response.data.code === "PAYMENT_SUCCESS") {
       return res.redirect(
-        `${process.env.CLIENT_SUCCESS_URL}?txn=${merchantTransactionId}&status=success`
+        `${CLIENT_SUCCESS_URL}?txn=${merchantTransactionId}&status=success`
       );
     }
 
     // ❌ Failure
     return res.redirect(
-      `${process.env.CLIENT_SUCCESS_URL}?txn=${merchantTransactionId}&status=failed`
+      `${CLIENT_SUCCESS_URL}?txn=${merchantTransactionId}&status=failed`
     );
   } catch (error) {
     console.error("checkStatus error:", error.response?.data || error.message);
-    return res.redirect(
-      `${process.env.CLIENT_SUCCESS_URL}?status=error`
-    );
+    return res.redirect(`${getClientSuccessUrl()}?status=error`);
   }
 };
