@@ -212,6 +212,14 @@ const paymentGatewayModal = require("../../models/payment/Payment");
 const { v4: uuidv4 } = require("uuid");
 const crypto = require("crypto");
 
+// PhonePe credentials — real ones from env, falling back to the TEST merchant.
+// Set PHONEPE_MERCHANT_ID / PHONEPE_SALT_KEY / PHONEPE_SALT_INDEX in .env to go
+// live (used by BOTH the website and the mobile-app payment flows).
+const PP_MERCHANT_ID = process.env.PHONEPE_MERCHANT_ID || "M22E0HWMLLIYY";
+const PP_SALT_KEY =
+  process.env.PHONEPE_SALT_KEY || "ecd74096-c2ad-4989-bcca-69a1c9d8deec";
+const PP_SALT_INDEX = String(process.env.PHONEPE_SALT_INDEX || "1");
+
 class Paymentgetway {
   async initiatePayment(req, res) {
     const transactionId = uuidv4();
@@ -220,32 +228,29 @@ class Paymentgetway {
     try {
       const base64 = Buffer.from(
         JSON.stringify({
-          merchantId: process.env.PHONEPE_MERCHANT_ID,
+          merchantId: PP_MERCHANT_ID,
           merchantTransactionId: transactionId,
           merchantUserId: req.body.userId,
           amount: req.body.amount,
           redirectUrl: "",
           redirectMode: "POST",
-          callbackUrl: `https://api.nithyaevent.com/api/payment/status/M22E0HWMLLIYY/${transactionId}`,
+          callbackUrl: `https://api.nithyaevent.com/api/payment/status/${PP_MERCHANT_ID}/${transactionId}`,
           mobileNumber: req.body.mobileNumber,
           paymentInstrument: {
             type: "PAY_PAGE",
           },
         })
       ).toString("base64");
-      console.log("base64===", base64);
 
       const sha256encode =
-        sha256(base64 + "/pg/v1/payecd74096-c2ad-4989-bcca-69a1c9d8deec") +
-        "###1";
-      console.log("sha256encode===", sha256encode);
+        sha256(base64 + "/pg/v1/pay" + PP_SALT_KEY) + "###" + PP_SALT_INDEX;
 
       return res.status(200).json({
         success: true,
         message: "Payment initiated successfully",
         base64: base64,
         sha256encode: sha256encode,
-        merchantId: "M22E0HWMLLIYY",
+        merchantId: PP_MERCHANT_ID,
         merchantTransactionId: transactionId,
       });
     } catch (error) {
@@ -259,15 +264,14 @@ class Paymentgetway {
 
   async checkTransactionStatus(req, res) {
     const { merchantId, merchantTransactionId, userId } = req.params;
-    const saltKey = "ecd74096-c2ad-4989-bcca-69a1c9d8deec";
     const url = `/pg/v1/status/${merchantId}/${merchantTransactionId}`;
     const xVerify =
       crypto
         .createHash("sha256")
-        .update(url + saltKey)
+        .update(url + PP_SALT_KEY)
         .digest("hex") +
       "###" +
-      1;
+      PP_SALT_INDEX;
 
     try {
       const response = await axios.get(
@@ -276,7 +280,7 @@ class Paymentgetway {
           headers: {
             "Content-Type": "application/json",
             "X-VERIFY": xVerify,
-            " X-MERCHANT-ID": "M22E0HWMLLIYY",
+            "X-MERCHANT-ID": PP_MERCHANT_ID,
           },
         }
       );
