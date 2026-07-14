@@ -2,8 +2,11 @@ const axios = require("axios");
 const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
 
-const MERCHANT_ID = process.env.PHONEPE_MERCHANT_ID;
-const SALT_KEY = process.env.PHONEPE_SALT_KEY;
+// Real credentials come from env; fall back to PhonePe's TEST merchant so the
+// sandbox keeps working before go-live.
+const MERCHANT_ID = process.env.PHONEPE_MERCHANT_ID || "M22E0HWMLLIYY";
+const SALT_KEY =
+  process.env.PHONEPE_SALT_KEY || "ecd74096-c2ad-4989-bcca-69a1c9d8deec";
 const SALT_INDEX = process.env.PHONEPE_SALT_INDEX || 1;
 const PHONEPE_BASE = "https://api.phonepe.com/apis/hermes";   // production
 // For sandbox use: https://api-preprod.phonepe.com/apis/pg-sandbox
@@ -27,8 +30,15 @@ exports.newPayment = async (req, res) => {
     const SERVER_BASE =
       process.env.SERVER_BASE_URL || "https://api.nithyaevent.com";
 
+    // Use the real merchant credentials from env when set; fall back to the
+    // PhonePe TEST merchant so the sandbox still works before go-live.
+    const merchantId = process.env.PHONEPE_MERCHANT_ID || "M22E0HWMLLIYY";
+    const saltKey =
+      process.env.PHONEPE_SALT_KEY || "ecd74096-c2ad-4989-bcca-69a1c9d8deec";
+    const saltIndex = process.env.PHONEPE_SALT_INDEX || 1;
+
     const data = {
-      merchantId: "M22E0HWMLLIYY",
+      merchantId: merchantId,
       merchantTransactionId: merchantTransactionId,
       merchantUserId: req.body.MUID,
       name: req.body.name,
@@ -43,9 +53,6 @@ exports.newPayment = async (req, res) => {
 
     const payload = JSON.stringify(data);
     const base64Payload = Buffer.from(payload).toString("base64");
-
-    const saltKey = "ecd74096-c2ad-4989-bcca-69a1c9d8deec";
-    const saltIndex = 1;
 
     const stringToHash =
       base64Payload + "/pg/v1/pay" + saltKey;
