@@ -92,10 +92,34 @@ exports.sendPush = async (
       data: stringData,
       android: {
         priority: "high",
-        notification: { sound, channelId, defaultSound: true },
+        notification: {
+          sound, // "default" or a bundled raw sound name
+          channelId, // must match the app's notifee channel
+          notificationPriority: "PRIORITY_MAX", // heads-up pop
+          defaultVibrateTimings: true,
+        },
       },
-      apns: { payload: { aps: { sound } } },
+      apns: {
+        headers: { "apns-priority": "10" },
+        payload: { aps: { sound } },
+      },
     });
+
+    // Log per-token failures (e.g. stale/unregistered tokens) to aid debugging.
+    if (res.failureCount > 0) {
+      res.responses.forEach((r, i) => {
+        if (!r.success) {
+          console.warn(
+            `Push failed for token ${list[i]?.slice(0, 12)}…:`,
+            r.error?.code,
+            r.error?.message
+          );
+        }
+      });
+    }
+    console.log(
+      `Push sent: ${res.successCount} ok, ${res.failureCount} failed`
+    );
     return { success: true, successCount: res.successCount, res };
   } catch (err) {
     console.error("sendPush error:", err.message);

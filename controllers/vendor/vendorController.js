@@ -30,6 +30,44 @@ const safeName = (str) =>
   "vendor";
 
 // Download all of a vendor's documents as a single ZIP.
+// Diagnostic: send a test push to a vendor's saved token. Hit
+// GET /vendor/test-push/:id — the JSON response tells you exactly what happened
+// (no token saved / firebase not configured / sent / per-token error).
+exports.testVendorPush = async (req, res) => {
+  try {
+    const { sendPush, isPushEnabled } = require("../../utilities/firebase");
+    const vendor = await vendorSchema.findById(req.params.id).select(
+      "fcm_token vendor_name"
+    );
+    if (!vendor) return res.status(404).json({ message: "Vendor not found" });
+    if (!isPushEnabled()) {
+      return res.status(200).json({
+        ok: false,
+        reason:
+          "Firebase not initialized on the server — check FIREBASE_* env vars.",
+      });
+    }
+    if (!vendor.fcm_token) {
+      return res.status(200).json({
+        ok: false,
+        reason:
+          "This vendor has no saved FCM token yet — open & log into the Vendor App to register it.",
+      });
+    }
+    const result = await sendPush(vendor.fcm_token, {
+      title: "Test Notification 🔔",
+      body: "If you can see this (with sound), push is working!",
+      data: { type: "test" },
+      sound: "default",
+      channelId: "orders",
+    });
+    return res.status(200).json({ ok: result.success, result });
+  } catch (error) {
+    console.error("testVendorPush error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // Save/refresh a vendor's FCM device token (called by the Vendor App after
 // login / whenever the token changes) so push notifications can reach them.
 exports.saveVendorFcmToken = async (req, res) => {
