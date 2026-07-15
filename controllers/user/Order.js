@@ -304,19 +304,34 @@ exports.userOrder = async (req, res) => {
     // the background so it never blocks/breaks the order response.
     (async () => {
       try {
+        const vendorIds = Array.from(notifiedVendorIds);
         const vendors = await vendorSchema.find(
-          { _id: { $in: Array.from(notifiedVendorIds) } },
+          { _id: { $in: vendorIds } },
           "fcm_token"
         );
+        console.log(
+          `[push] order ${orderId}: notifying ${vendorIds.length} vendor(s), ${vendors.length} found in DB`
+        );
         for (const v of vendors) {
-          if (!v.fcm_token) continue;
-          await sendPush(v.fcm_token, {
+          if (!v.fcm_token) {
+            console.warn(`[push] vendor ${v._id}: no fcm_token saved — skipped`);
+            continue;
+          }
+          const result = await sendPush(v.fcm_token, {
             title: "New Order Received 🎉",
             body: `You have a new booking for "${event_name}". Tap to view.`,
             data: { type: "new_order", order_id: orderId },
             sound: "default",
             channelId: "orders",
           });
+          // Never swallow the outcome — a silent failure here looks identical
+          // to "push works" from the order's point of view.
+          console.log(
+            `[push] vendor ${v._id}:`,
+            result?.success
+              ? `sent (${result.successCount} ok)`
+              : `FAILED — ${result?.reason || result?.error}`
+          );
         }
       } catch (pushErr) {
         console.error("Vendor push notification failed:", pushErr.message);
