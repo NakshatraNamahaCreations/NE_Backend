@@ -24,6 +24,7 @@
     "dotenv": "^16.4.5",
     "ebox-backend": "file:",
     "express": "^4.19.2",
+    "firebase-admin": "^14.1.0",
     "google-auth-library": "^9.15.1",
     "jsonwebtoken": "^9.0.2",
     "jszip": "^3.10.1",
