@@ -5,7 +5,7 @@
 const fs = require("fs");
 const path = require("path");
 
-let admin = null;
+let getMessaging = null;
 let initialized = false;
 
 // Load the service account from (in order): a full JSON env var, three separate
@@ -47,11 +47,16 @@ function loadServiceAccount() {
 try {
   // Require inside try so a missing package never crashes the server — push is
   // simply disabled until firebase-admin is installed + the key is present.
-  admin = require("firebase-admin");
+  // Use the modular API: firebase-admin v13+ dropped the old namespaced
+  // `admin.messaging()` accessor.
+  const { initializeApp, cert, getApps } = require("firebase-admin/app");
+  ({ getMessaging } = require("firebase-admin/messaging"));
   const serviceAccount = loadServiceAccount();
 
   if (serviceAccount) {
-    admin.initializeApp({ credential: admin.cert(serviceAccount) });
+    if (!getApps().length) {
+      initializeApp({ credential: cert(serviceAccount) });
+    }
     initialized = true;
     console.log("✅ Firebase Admin initialized (push enabled)");
   } else {
@@ -86,7 +91,7 @@ exports.sendPush = async (
   );
 
   try {
-    const res = await admin.messaging().sendEachForMulticast({
+    const res = await getMessaging().sendEachForMulticast({
       tokens: list,
       notification: { title, body },
       data: stringData,
