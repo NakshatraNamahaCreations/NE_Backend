@@ -145,3 +145,6 @@ public
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Local DB dumps from scripts/backup-db.js (contain personal data)
+backups/
